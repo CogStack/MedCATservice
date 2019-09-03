@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+__pycache__
 venv
 tmp_cat.log
-__pycache__
+envs
