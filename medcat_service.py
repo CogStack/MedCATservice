@@ -17,6 +17,10 @@ class MedCatService:
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.info('Initializing MedCAT service ...')
 
+        self.app_name = 'MedCAT'
+        self.app_lang = 'en'
+        self.app_version = MedCatService._get_medcat_version()
+
         self.vocab = Vocab()
         self.cdb = CDB()
 
@@ -26,11 +30,7 @@ class MedCatService:
 
         self.cat.spacy_cat.train = os.getenv("TRAINING_MODE", False)
 
-        self.bulk_nproc = int(os.getenv('BULK_NPROC', 2))
-
-        self.app_name = 'MEDCAT'
-        self.app_lang = 'en'
-        self.app_version = os.getenv("CAT_VERSION", '0.1.0')
+        self.bulk_nproc = int(os.getenv('BULK_NPROC', 8))
 
         self.log.info('Service CAT is ready')
 
@@ -153,3 +153,17 @@ class MedCatService:
                 out_res['footer'] = in_ct['footer']
 
             yield out_res
+
+    @staticmethod
+    def _get_medcat_version():
+        """
+        Returns the version string of the MedCAT module as reported by pip
+        :return:
+        """
+        try:
+            import subprocess
+            result = subprocess.check_output(['pip', 'show', 'medcat'], universal_newlines=True)
+            version_line = list(filter(lambda v: 'Version' in v, result.split('\n')))
+            return version_line[0].split(' ')[1]
+        except Exception:
+            raise Exception("Cannot read the MedCAT library version")
