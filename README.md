@@ -13,10 +13,11 @@ The API definition follows the one defined in [CogStack NLP REST Service](https:
 The full specification is available is [OpenAPI](https://github.com/CogStack/nlp-rest-service/blob/master/service/api-specs/openapi.yaml) specification.
 
 
-
 # Running the application
 
 The application can be run either as a standalone Python application or as running inside the Docker container (recommended).
+
+**IMPORTANT:** Please note that the current version of the docker image uses `werkzeug` server for serving Flask applications and should not be used in production.
 
 
 ## Running as a Python app
@@ -31,10 +32,9 @@ export FLASK_APP=app.py
 flask run --host <ip/host>
 ```
 
-
 ## Running in a Docker container
 
-The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the DockerHub (**TODO**) or build manually using the provided `Dockerfile`.
+The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the Docker Hub (`cogstacksystems/medcatservice:latest`) or build manually using the provided `Dockerfile`.
 
 To build the Docker image manually:
 
@@ -45,8 +45,10 @@ To run the container using the built image:
 `docker run -it -p 5000:5000 -v <models-local-dir>:/cat/models:ro medcat-service`
 
 By default the MedCAT service will be running on port `5000`.
- 
+
 **IMPORTANT:** Please note that there are no models included in the Docker image and one needs to bind the directory containing them manually, as in `-v <models-local-dir>:/cat/models:ro`.
+
+An example script `./docker/run_medmen.sh` was provided to run the Docker container with MedCAT service. The script will download an example model, use an example environment configuration and start the service.
 
 
 # Example use
@@ -89,9 +91,3 @@ and the received result:
 # Configuration
 
 Currently, both the application and MedCAT configuration is done using a set of environment variables. This way, some internal MedCAT parameters can tailored to specific use-case. Please see `envs` directory for example configuration files.
-
-
-# TODO
-- image on Docker Hub
-- tests
-- set up TravisCI
