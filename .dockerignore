@@ -3,4 +3,7 @@
 __pycache__
 venv
 tmp_cat.log
+# skip the custom envs
 envs
+# skip the models directory
+models

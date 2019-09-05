@@ -1,0 +1,12 @@
+version: '3.5'
+
+services:
+  medcat-service:
+    #image: cogstacksystems/medcatservice:latest
+    build: ..
+    env_file:
+      - ../envs/env_medmen
+    volumes:
+    - ../models/:/cat/models:ro
+    ports:
+    - "5000:5000"

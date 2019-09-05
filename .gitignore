@@ -1,6 +1,7 @@
-models
 .DS_Store
 .idea
 venv
 tmp_cat.log
 __pycache__
+# skip the models directory
+models
