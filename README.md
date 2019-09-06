@@ -26,7 +26,6 @@ Please note that prior running the application a number of requirements need to 
 
 Following, one needs to set up and run Flask:
 ```
-export FLASK_ENV=development
 export FLASK_APP=app.py
 
 flask run --host <ip/host>
