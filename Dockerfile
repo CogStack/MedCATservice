@@ -15,5 +15,5 @@ RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2
 COPY . /cat
 
 # Now run the simple api
-ENTRYPOINT ["python"]
-CMD ["app.py"]
+#ENTRYPOINT ["bin/bash"]
+CMD ["/bin/bash", "start-service-prod.sh"]

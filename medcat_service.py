@@ -24,13 +24,12 @@ class MedCatService:
         self.vocab = Vocab()
         self.cdb = CDB()
 
-        self.cdb.load_dict(os.getenv("CDB_MODEL", '/cat/models/cdb.dat'))
-        self.vocab.load_dict(path=os.getenv("VOCAB_MODEL", '/cat/models/vocab.dat'))
+        self.cdb.load_dict(os.getenv("APP_CDB_MODEL", '/cat/models/cdb.dat'))
+        self.vocab.load_dict(path=os.getenv("APP_VOCAB_MODEL", '/cat/models/vocab.dat'))
         self.cat = CAT(self.cdb, vocab=self.vocab)
 
-        self.cat.spacy_cat.train = os.getenv("TRAINING_MODE", False)
-
-        self.bulk_nproc = int(os.getenv('BULK_NPROC', 8))
+        self.cat.spacy_cat.train = os.getenv("APP_TRAINING_MODE", False)
+        self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
         self.log.info('Service CAT is ready')
 
@@ -80,13 +79,20 @@ class MedCatService:
         :param content: document to be processed, containing 'text' field.
         :return: processing result containing documents with extracted annotations,stored as KVPs.
         """
-        batch_size = min(300, max(1, int(len(content) / (2 * self.bulk_nproc))))
 
-        # if the batch size is very small, just use one processing thread
-        if batch_size >= self.bulk_nproc * 2:
+        # process at least 10 docs per thread and don't bother with starting
+        # additional threads when less documents were provided
+        min_doc_per_thread = 10
+        num_slices = max(1, int(len(content) / min_doc_per_thread))
+        batch_size = min(300, num_slices)
+
+        if batch_size >= self.bulk_nproc:
             nproc = self.bulk_nproc
         else:
-            nproc = 1
+            batch_size = min_doc_per_thread
+            nproc = max(1, num_slices)
+            if len(content) > batch_size * nproc:
+                nproc += 1
 
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
