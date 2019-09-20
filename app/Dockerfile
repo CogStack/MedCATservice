@@ -2,7 +2,7 @@ FROM python:3.7-slim
 
 # Set the pythonpath and preapre the base layer
 WORKDIR /cat
-COPY ./requirements.txt /cat
+COPY requirements.txt /cat
 
 # Reqs for the app
 RUN pip install -r requirements.txt

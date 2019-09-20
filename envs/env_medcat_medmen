@@ -1,4 +1,4 @@
-envs/env_medcat_medann TYPE=NOT_UMLS
+TYPE=NOT_UMLS
 UPDATE_COO=False
 DEBUG=False
 NESTED_ENTITIES=False

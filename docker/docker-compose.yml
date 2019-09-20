@@ -3,7 +3,7 @@ version: '3.5'
 services:
   medcat-service:
     #image: cogstacksystems/medcatservice:latest
-    build: ..
+    build: ../app
     env_file:
       - ../envs/env_medcat_medmen
       - ../envs/env_app
