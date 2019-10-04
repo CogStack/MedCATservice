@@ -6,20 +6,21 @@ import logging
 import os
 
 
+
 # todo: config file, env variables, logging
 #
-class MedCatService:
+class MedCatProcessor:
     """"
-    MedCAT Service class is wrapper over MedCAT that implements annotations extractions functionality
+    MedCAT Processor class is wrapper over MedCAT that implements annotations extractions functionality
     (both single and bulk processing) that can be easily exposed for an API.
     """
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
-        self.log.info('Initializing MedCAT service ...')
+        self.log.info('Initializing MedCAT processor ...')
 
         self.app_name = 'MedCAT'
         self.app_lang = 'en'
-        self.app_version = MedCatService._get_medcat_version()
+        self.app_version = MedCatProcessor._get_medcat_version()
 
         self.vocab = Vocab()
         self.cdb = CDB()
@@ -31,7 +32,7 @@ class MedCatService:
         self.cat.spacy_cat.train = os.getenv("APP_TRAINING_MODE", False)
         self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
-        self.log.info('Service CAT is ready')
+        self.log.info('MedCAT processor is ready')
 
     def get_app_info(self):
         """
@@ -97,10 +98,10 @@ class MedCatService:
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
         invalid_doc_ids = []
-        ann_res = self.cat.multi_processing(MedCatService._generate_input_doc(content, invalid_doc_ids),
+        ann_res = self.cat.multi_processing(MedCatProcessor._generate_input_doc(content, invalid_doc_ids),
                                             nproc=nproc, batch_size=batch_size)
 
-        return MedCatService._generate_result(content, ann_res, invalid_doc_ids)
+        return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
 
     # helper generator functions to avoid multiple copies of data
     #
