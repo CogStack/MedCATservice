@@ -2,6 +2,7 @@
 .idea
 __pycache__
 venv
+venv-test
 tmp_cat.log
 # skip the custom envs
 envs
