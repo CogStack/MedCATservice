@@ -15,4 +15,4 @@ before_install:
   - pip install virtualenv
 
 script:
-  - ./run_tests.sh
+  - bash run_tests.sh
