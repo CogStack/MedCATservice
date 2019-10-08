@@ -24,16 +24,19 @@ The application can be run either as a standalone Python application or as runni
 
 Please note that prior running the application a number of requirements need to installed (see: `requirements.txt`).
 
-Following, one needs to set up and run Flask:
-```
-export FLASK_APP=app.py
+There are two scripts provided implementing starting the application:
+- `start-service-dev.sh` - starts the application in the development mode and using `werkzeug` server for serving Flask applications,
+- `start-service-prod.sh` - starts the application in 'production' mode and using `gunicorn` server.
 
-flask run --host <ip/host>
-```
+These scripts use the following environment variables which are set to default when not specified:
+- `SERVER_HOST` - specifies the host address (default: `0.0.0.0`),
+- `SERVER_PORT` - the port number used (default: `5000`),
+- `SERVER_WORKERS` - the number of workers serving the Flask app working in parallel (default: `1` ; only used in production).
 
 ## Running in a Docker container
 
-The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the Docker Hub (`cogstacksystems/medcatservice:latest`) or build manually using the provided `Dockerfile`.
+The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the Docker Hub (`cogstacksystems/medcatservice:latest`) or build manually using the provided `Dockerfile`. 
+Please note that by default the built docker image will run the Flask application in 'production' mode running `start-service-prod.sh` script.
 
 To build the Docker image manually:
 
@@ -45,9 +48,7 @@ To run the container using the built image:
 
 By default the MedCAT service will be running on port `5000`.
 
-**IMPORTANT:** Please note that there are no models included in the Docker image and one needs to bind the directory containing them manually, as in `-v <models-local-dir>:/cat/models:ro`.
-
-An example script `./docker/run_medmen.sh` was provided to run the Docker container with MedCAT service. The script will download an example model, use an example environment configuration and start the service.
+An example script `./docker/run_example_medmen.sh` was provided to run the Docker container with MedCAT service. The script will download an example model (using `./models/download_medmen.sh` script), will use an example environment configuration and start the service.
 
 
 # Example use
