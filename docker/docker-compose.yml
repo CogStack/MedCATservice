@@ -5,9 +5,10 @@ services:
     #image: cogstacksystems/medcatservice:latest
     build: ..
     env_file:
-      - ../envs/env_medcat_medmen
+      - ../envs/env_medcat
       - ../envs/env_app
     volumes:
-    - ../models/medmen:/cat/models:ro
+    - ../models/medmen/vocab.dat:/cat/models/vocab.dat:ro
+    - ../models/medmen/cdb.dat:/cat/models/cdb.dat:ro
     ports:
     - "5000:5000"
