@@ -5,6 +5,6 @@ venv
 venv-test
 tmp_cat.log
 # skip the custom envs
-envs
+#envs
 # skip the models directory
 models

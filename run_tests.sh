@@ -20,6 +20,7 @@ source venv-test/bin/activate
 pip install -r medcat_service/requirements.txt
 
 # download the sci-scpacy language model
+python -m spacy download en_core_web_sm
 pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.3/en_core_sci_md-0.2.3.tar.gz
 
 # download the test MedCAT model
