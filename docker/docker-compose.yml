@@ -2,12 +2,11 @@ version: '3.5'
 
 services:
   medcat-service:
-    #image: cogstacksystems/medcatservice:latest
-    #image: medcat-service-models
+    #image: cogstacksystems/medcatservice:dev-latest
     build: ..
     env_file:
-      - ../envs/env_medcat
       - ../envs/env_app
+      - ../envs/env_medcat
     #environment:
     #  - APP_VOCAB_MODEL=/cat/models/medmen/vocab.dat
     #  - APP_CDB_MODEL=/cat/models/medmen/cdb.dat
