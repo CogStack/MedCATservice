@@ -13,16 +13,6 @@ The API definition follows the one defined in [CogStack GATE NLP Service](https:
 The full specification is available is [OpenAPI](https://github.com/CogStack/gate-nlp-service/tree/devel/api-specs) specification.
 
 
-# Configuration
-
-In the current implementation, configuration for both MedCAT Service application and MedCAT NLP library is based on environment variables. These will be provided usually in two files in `env` directory:
-- `env_app` - configuration of MedCAT Service app,
-- `env_medcat` - configuration of MedCAT library.
-
-Both files allow tailoring MedCAT for specific use-cases.
-When running MedCAT Service, these variables need to be loaded into the current working environment.
-
-
 # Running the application
 
 The application can be run either as a standalone Python application or as running inside the Docker container (recommended).
@@ -34,12 +24,6 @@ Please note that prior running the application a number of requirements need to 
 There are two scripts provided implementing starting the application:
 - `start-service-dev.sh` - starts the application in the development mode and using `werkzeug` server for serving Flask applications,
 - `start-service-prod.sh` - starts the application in 'production' mode and using `gunicorn` server.
-
-These scripts use the following environment variables which are set to default when not specified:
-- `SERVER_HOST` - specifies the host address (default: `0.0.0.0`),
-- `SERVER_PORT` - the port number used (default: `5000`),
-- `SERVER_WORKERS` - the number of workers serving the Flask app working in parallel (default: `1` ; only used in production server).
-- `SERVER_WORKER_TIMEOUT` - the max timeout (in sec) for receiving response from worker (default: `300` ; only used with production server).
 
 ## Running in a Docker container
 
@@ -101,3 +85,34 @@ and the received result:
 ```
 
 Please note that the returned NLP annotations will depend on the underlying model used. For evaluation, we can only provide a very basic model trained on [MedMentions](https://github.com/chanzuckerberg/MedMentions). Models utilising [SNOMED CT](https://www.england.nhs.uk/digitaltechnology/digital-primary-care/snomed-ct/) or [UMLS](https://www.nlm.nih.gov/research/umls/index.html) may require applying for licenses from the copyright holders.
+
+
+# Configuration
+
+In the current implementation, configuration for both MedCAT Service application and MedCAT NLP library is based on environment variables. These will be provided usually in two files in `env` directory:
+- `env_app` - configuration of MedCAT Service app,
+- `env_medcat` - configuration of MedCAT library.
+
+Both files allow tailoring MedCAT for specific use-cases. When running MedCAT Service, these variables need to be loaded into the current working environment.
+
+## MedCAT Service
+MedCAT Service application are defined in `envs/env_app` file.
+
+The following environment variables are available for tailoring the MedCAT Service `gunicorn` server:
+- `SERVER_HOST` - specifies the host address (default: `0.0.0.0`),
+- `SERVER_PORT` - the port number used (default: `5000`),
+- `SERVER_WORKERS` - the number of workers serving the Flask app working in parallel (default: `1` ; only used in production server).
+- `SERVER_WORKER_TIMEOUT` - the max timeout (in sec) for receiving response from worker (default: `300` ; only used with production server).
+
+The following environment variables are available for tailoring the MedCAT Service wrapper:
+- `APP_MODEL_NAME` - an informative name of the model used by MedCAT (optional), 
+- `APP_MODEL_CDB_PATH` - the path to the model's concept database,
+- `APP_MODEL_VOCAB_PATH` - the path to the model's vocabulary,
+- `APP_BULK_NPROC` - the number of threads used in bulk processing (default: `8`),
+- `APP_TRAINING_MODE` - whether to run the application with MedCAT in training mode (default: `False`).
+
+
+## MedCAT library
+MedCAT parameters are defined in selected `envs/env_medcat*` file. 
+
+For details on available MedCAT parameters please refer to [the official GitHub repository](https://github.com/CogStack/MedCAT/).

@@ -55,8 +55,8 @@ class MedCatProcessor(NlpProcessor):
         self.vocab = Vocab()
         self.cdb = CDB()
 
-        self.cdb.load_dict(os.getenv("APP_CDB_MODEL", '/cat/models/cdb.dat'))
-        self.vocab.load_dict(path=os.getenv("APP_VOCAB_MODEL", '/cat/models/vocab.dat'))
+        self.cdb.load_dict(os.getenv("APP_MODEL_CDB_PATH", '/cat/models/cdb.dat'))
+        self.vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH", '/cat/models/vocab.dat'))
         self.cat = CAT(self.cdb, vocab=self.vocab)
 
         self.cat.spacy_cat.train = os.getenv("APP_TRAINING_MODE", False)
