@@ -4,6 +4,7 @@
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
 from medcat.cat import CAT
+from datetime import datetime,timezone
 
 import logging
 import os
@@ -24,6 +25,14 @@ class NlpProcessor:
 
     def process_content_bulk(self, content):
         pass
+
+    @staticmethod
+    def _get_timestamp():
+        """
+        Returns the current timestamp in ISO 8601 format. Formatted as "yyyy-MM-dd'T'HH:mm:ss.SSSXXX".
+        :return: timestamp string
+        """
+        return datetime.now(tz=timezone.utc).isoformat(timespec='milliseconds')
 
 
 # TODO: use a config file instead of env variables
@@ -72,7 +81,9 @@ class MedCatProcessor(NlpProcessor):
         if 'text' not in content:
             error_msg = "'text' field missing in the payload content."
             nlp_result = {'success': False,
-                          'errors': [error_msg]}
+                          'errors': [error_msg],
+                          'timestamp': NlpProcessor._get_timestamp()
+                          }
             return nlp_result, False
 
         text = content['text']
@@ -86,7 +97,8 @@ class MedCatProcessor(NlpProcessor):
 
         nlp_result = {'text': text,
                       'annotations': entities,
-                      'success': True
+                      'success': True,
+                      'timestamp': NlpProcessor._get_timestamp()
                       }
 
         # append the footer
@@ -162,7 +174,8 @@ class MedCatProcessor(NlpProcessor):
             # parse the result
             out_res = {'text': res[1]["text"],
                        'annotations': res[1]["entities"],
-                       'success': True
+                       'success': True,
+                       'timestamp': NlpProcessor._get_timestamp()
                        }
             # append the footer
             if 'footer' in in_ct:
@@ -176,7 +189,8 @@ class MedCatProcessor(NlpProcessor):
 
             out_res = {'text': in_ct["text"],
                        'annotations': [],
-                       'success': True
+                       'success': True,
+                       'timestamp': NlpProcessor._get_timestamp()
                        }
             # append the footer
             if 'footer' in in_ct:

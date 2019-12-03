@@ -94,7 +94,8 @@ and the received result:
         "snomed": ""
       }
     ],
-    "success": true
+    "success": true,
+    "timestamp": "2019-12-03T16:09:58.196+00:00"
   }
 }
 ```
