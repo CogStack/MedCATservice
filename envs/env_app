@@ -1,5 +1,6 @@
 DEBUG=False
 
+APP_MODEL_NAME=MedMen
 APP_CDB_MODEL=/cat/models/cdb.dat
 APP_VOCAB_MODEL=/cat/models/vocab.dat
 

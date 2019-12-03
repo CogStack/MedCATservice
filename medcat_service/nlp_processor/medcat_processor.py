@@ -4,7 +4,7 @@
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
 from medcat.cat import CAT
-from datetime import datetime,timezone
+from datetime import datetime, timezone
 
 import logging
 import os
@@ -50,6 +50,7 @@ class MedCatProcessor(NlpProcessor):
         self.app_name = 'MedCAT'
         self.app_lang = 'en'
         self.app_version = MedCatProcessor._get_medcat_version()
+        self.app_model = os.getenv("APP_MODEL_NAME", 'unknown')
 
         self.vocab = Vocab()
         self.cdb = CDB()
@@ -70,7 +71,8 @@ class MedCatProcessor(NlpProcessor):
         """
         return {'name': self.app_name,
                 'language': self.app_lang,
-                'version': self.app_version}
+                'version': self.app_version,
+                'model': self.app_model}
 
     def process_content(self, content):
         """
