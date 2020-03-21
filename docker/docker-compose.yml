@@ -2,11 +2,16 @@ version: '3.5'
 
 services:
   medcat-service:
-    #image: cogstacksystems/medcatservice:latest
+    #image: cogstacksystems/medcatservice:dev-latest
     build: ..
     env_file:
-      - ../envs/env_medmen
+      - ../envs/env_app
+      - ../envs/env_medcat
+    #environment:
+    #  - APP_VOCAB_MODEL=/cat/models/medmen/vocab.dat
+    #  - APP_CDB_MODEL=/cat/models/medmen/cdb.dat
     volumes:
-    - ../models/:/cat/models:ro
+    - ../models/medmen/vocab.dat:/cat/models/vocab.dat:ro
+    - ../models/medmen/cdb.dat:/cat/models/cdb.dat:ro
     ports:
     - "5000:5000"

@@ -1,0 +1,6 @@
+medcat~=0.2
+Flask==1.1.1
+simplejson==3.17.0
+gunicorn==20.0.4
+injector==0.18
+flask-injector==0.12

@@ -1,0 +1,19 @@
+#dist: xenial
+
+language: python
+version:
+  - "3.7"
+
+before_cache:
+  - rm -f  $HOME/models/medmen
+
+cache:
+  directories:
+    - $HOME/models/medmen
+    - $HOME/venv-test
+
+before_install:
+  - pip install virtualenv
+
+script:
+  - bash run_tests.sh

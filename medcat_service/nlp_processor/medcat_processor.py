@@ -1,38 +1,68 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from medcat.cdb import CDB
 from medcat.utils.vocab import Vocab
 from medcat.cat import CAT
+from datetime import datetime, timezone
 
 import logging
 import os
 
 
-# todo: config file, env variables, logging
-#
-class MedCatService:
-    """"
-    MedCAT Service class is wrapper over MedCAT that implements annotations extractions functionality
-    (both single and bulk processing) that can be easily exposed for an API.
+class NlpProcessor:
+    """
+    This class defines an interface for NLP Processor
     """
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
-        self.log.info('Initializing MedCAT service ...')
+
+    def get_app_info(self):
+        pass
+
+    def process_content(self, content):
+        pass
+
+    def process_content_bulk(self, content):
+        pass
+
+    @staticmethod
+    def _get_timestamp():
+        """
+        Returns the current timestamp in ISO 8601 format. Formatted as "yyyy-MM-dd'T'HH:mm:ss.SSSXXX".
+        :return: timestamp string
+        """
+        return datetime.now(tz=timezone.utc).isoformat(timespec='milliseconds')
+
+
+# TODO: use a config file instead of env variables
+#
+class MedCatProcessor(NlpProcessor):
+    """"
+    MedCAT Processor class is wrapper over MedCAT that implements annotations extractions functionality
+    (both single and bulk processing) that can be easily exposed for an API.
+    """
+    def __init__(self):
+        super().__init__()
+
+        self.log.info('Initializing MedCAT processor ...')
 
         self.app_name = 'MedCAT'
         self.app_lang = 'en'
-        self.app_version = MedCatService._get_medcat_version()
+        self.app_version = MedCatProcessor._get_medcat_version()
+        self.app_model = os.getenv("APP_MODEL_NAME", 'unknown')
 
         self.vocab = Vocab()
         self.cdb = CDB()
 
-        self.cdb.load_dict(os.getenv("CDB_MODEL", '/cat/models/cdb.dat'))
-        self.vocab.load_dict(path=os.getenv("VOCAB_MODEL", '/cat/models/vocab.dat'))
+        self.cdb.load_dict(os.getenv("APP_MODEL_CDB_PATH", '/cat/models/cdb.dat'))
+        self.vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH", '/cat/models/vocab.dat'))
         self.cat = CAT(self.cdb, vocab=self.vocab)
 
-        self.cat.spacy_cat.train = os.getenv("TRAINING_MODE", False)
+        self.cat.spacy_cat.train = os.getenv("APP_TRAINING_MODE", False)
+        self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
-        self.bulk_nproc = int(os.getenv('BULK_NPROC', 8))
-
-        self.log.info('Service CAT is ready')
+        self.log.info('MedCAT processor is ready')
 
     def get_app_info(self):
         """
@@ -41,7 +71,8 @@ class MedCatService:
         """
         return {'name': self.app_name,
                 'language': self.app_lang,
-                'version': self.app_version}
+                'version': self.app_version,
+                'model': self.app_model}
 
     def process_content(self, content):
         """
@@ -52,20 +83,24 @@ class MedCatService:
         if 'text' not in content:
             error_msg = "'text' field missing in the payload content."
             nlp_result = {'success': False,
-                          'errors': [error_msg]}
+                          'errors': [error_msg],
+                          'timestamp': NlpProcessor._get_timestamp()
+                          }
             return nlp_result, False
 
         text = content['text']
 
-        # assume an empty text or just an entry a valid content
-        if text is not None and len(text) > 0:
+        # assume an that a blank document is a valid document and process it only
+        # when it contains any non-blank characters
+        if text is not None and len(text.strip()) > 0:
             entities = self.cat.get_entities(text)
         else:
             entities = []
 
         nlp_result = {'text': text,
                       'annotations': entities,
-                      'success': True
+                      'success': True,
+                      'timestamp': NlpProcessor._get_timestamp()
                       }
 
         # append the footer
@@ -80,21 +115,28 @@ class MedCatService:
         :param content: document to be processed, containing 'text' field.
         :return: processing result containing documents with extracted annotations,stored as KVPs.
         """
-        batch_size = min(300, max(1, int(len(content) / (2 * self.bulk_nproc))))
 
-        # if the batch size is very small, just use one processing thread
-        if batch_size >= self.bulk_nproc * 2:
+        # process at least 10 docs per thread and don't bother with starting
+        # additional threads when less documents were provided
+        min_doc_per_thread = 10
+        num_slices = max(1, int(len(content) / min_doc_per_thread))
+        batch_size = min(300, num_slices)
+
+        if batch_size >= self.bulk_nproc:
             nproc = self.bulk_nproc
         else:
-            nproc = 1
+            batch_size = min_doc_per_thread
+            nproc = max(1, num_slices)
+            if len(content) > batch_size * nproc:
+                nproc += 1
 
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
         invalid_doc_ids = []
-        ann_res = self.cat.multi_processing(MedCatService._generate_input_doc(content, invalid_doc_ids),
+        ann_res = self.cat.multi_processing(MedCatProcessor._generate_input_doc(content, invalid_doc_ids),
                                             nproc=nproc, batch_size=batch_size)
 
-        return MedCatService._generate_result(content, ann_res, invalid_doc_ids)
+        return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
 
     # helper generator functions to avoid multiple copies of data
     #
@@ -109,7 +151,8 @@ class MedCatService:
         :return: consecutive tuples of (idx, document)
         """
         for i in range(0, len(documents)):
-            if documents[i]['text'] is not None and len(documents[i]['text']) > 0:
+            # assume the document to be processed only when it is not blank
+            if 'text' in documents[i] and documents[i]['text'] is not None and len(documents[i]['text'].strip()) > 0:
                 yield i, documents[i]['text']
             else:
                 invalid_doc_idx.append(i)
@@ -133,7 +176,8 @@ class MedCatService:
             # parse the result
             out_res = {'text': res[1]["text"],
                        'annotations': res[1]["entities"],
-                       'success': True
+                       'success': True,
+                       'timestamp': NlpProcessor._get_timestamp()
                        }
             # append the footer
             if 'footer' in in_ct:
@@ -146,7 +190,9 @@ class MedCatService:
             in_ct = in_documents[i]
 
             out_res = {'text': in_ct["text"],
-                       'success': True
+                       'annotations': [],
+                       'success': True,
+                       'timestamp': NlpProcessor._get_timestamp()
                        }
             # append the footer
             if 'footer' in in_ct:

@@ -1,7 +1,10 @@
 .DS_Store
 .idea
 venv
+venv-test
 tmp_cat.log
 __pycache__
 # skip the models directory
-models
+models/*
+!models/*.sh
+
