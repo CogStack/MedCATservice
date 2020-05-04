@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from medcat.cdb import CDB
-from medcat.utils.vocab import Vocab
-from medcat.cat import CAT
-from datetime import datetime, timezone
-
 import logging
 import os
+from datetime import datetime, timezone
+
+from medcat.cat import CAT
+from medcat.cdb import CDB
+from medcat.utils.vocab import Vocab
 
 
 class NlpProcessor:

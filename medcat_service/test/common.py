@@ -18,10 +18,10 @@ def get_example_long_document():
     return """Pt is 40yo mother, software engineer
             HPI : Sleeping trouble on present dosage of Clonidine.
             Severe Rash  on face and leg, slightly itchy
-            Meds : Vyvanse 50 mgs po at breakfast daily, 
+            Meds : Vyvanse 50 mgs po at breakfast daily,
             Clonidine 0.2 mgs -- 1 and 1 / 2 tabs po qhs,
             Aspirin -- 4-5 tabs daily
-            HEENT : Boggy inferior turbinates, No oropharyngeal lesion 
+            HEENT : Boggy inferior turbinates, No oropharyngeal lesion
             Lungs : clear Heart : Regular rhythm
             Skin :  Papular mild erythematous eruption to hairline Follow-up as scheduled."""
 

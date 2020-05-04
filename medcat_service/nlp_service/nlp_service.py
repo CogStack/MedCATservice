@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import injector
+
 from medcat_service.nlp_processor import MedCatProcessor
 
 
