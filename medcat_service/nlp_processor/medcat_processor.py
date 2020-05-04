@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from medcat.cat import CAT
 from medcat.cdb import CDB
+from medcat.meta_cat import MetaCAT
 from medcat.utils.vocab import Vocab
 
 
@@ -35,8 +36,6 @@ class NlpProcessor:
         return datetime.now(tz=timezone.utc).isoformat(timespec='milliseconds')
 
 
-# TODO: use a config file instead of env variables
-#
 class MedCatProcessor(NlpProcessor):
     """"
     MedCAT Processor class is wrapper over MedCAT that implements annotations extractions functionality
@@ -47,19 +46,16 @@ class MedCatProcessor(NlpProcessor):
 
         self.log.info('Initializing MedCAT processor ...')
 
+        # TODO: use a config file instead of env variables
+        #
         self.app_name = 'MedCAT'
         self.app_lang = 'en'
         self.app_version = MedCatProcessor._get_medcat_version()
         self.app_model = os.getenv("APP_MODEL_NAME", 'unknown')
 
-        self.vocab = Vocab()
-        self.cdb = CDB()
-
-        self.cdb.load_dict(os.getenv("APP_MODEL_CDB_PATH", '/cat/models/cdb.dat'))
-        self.vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH", '/cat/models/vocab.dat'))
-        self.cat = CAT(self.cdb, vocab=self.vocab)
-
+        self.cat = self._create_cat()
         self.cat.spacy_cat.train = os.getenv("APP_TRAINING_MODE", False)
+
         self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
         self.log.info('MedCAT processor is ready')
@@ -137,6 +133,35 @@ class MedCatProcessor(NlpProcessor):
                                             nproc=nproc, batch_size=batch_size)
 
         return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
+
+    # helper MedCAT methods
+    #
+    def _create_cat(self):
+        """
+        Loads MedCAT resources and creates CAT instance
+        """
+        if os.getenv("APP_MODEL_VOCAB_PATH") is None:
+            raise ValueError("Vocabulary (env: APP_MODEL_VOCAB_PATH) not specified")
+
+        if os.getenv("APP_MODEL_CDB_PATH") is None:
+            raise Exception("Concept database (env: APP_MODEL_CDB_PATH) not specified")
+
+        # Vocabulary and Concept Database are mandatory
+        vocab = Vocab()
+        vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH"))
+
+        cdb = CDB()
+        cdb.load_dict(path=os.getenv("APP_MODEL_CDB_PATH"))
+
+        # Meta-annotation models are optional
+        meta_models = []
+        if os.getenv("APP_MODEL_META_PATH_LIST") is not None:
+            for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(':'):
+                m = MetaCAT(save_dir=model_path)
+                m.load()
+                meta_models.append(m)
+
+        return CAT(cdb=cdb, vocab=vocab, meta_cats=meta_models)
 
     # helper generator functions to avoid multiple copies of data
     #
