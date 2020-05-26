@@ -54,16 +54,17 @@ Assuming that the application is running on the `localhost` with the API exposed
 ```
 curl -XPOST http://localhost:5000/api/process \
   -H 'Content-Type: application/json' \
-  -d '{"content":{"text":"lung cancer diagnosis"}}'
+  -d '{"content":{"text":"The patient was diagnosed with leukemia."}}'
 ```
 
 and the received result:
 ```
 {
   "result": {
-    "text": "the patient was diagnosed with leukemia",
+    "text": "The patient was diagnosed with leukemia.",
     "annotations": [
       {
+        "pretty_name": "leukemia",
         "cui": "C0023418",
         "tui": "T191",
         "type": "Neoplastic Process",
@@ -71,11 +72,9 @@ and the received result:
         "acc": "1",
         "start": 31,
         "end": 39,
+        "info": {},
         "id": "0",
-        "pretty_name": "leukemia",
-        "icd10": "",
-        "umls": "",
-        "snomed": ""
+        "meta_anns": {}
       }
     ],
     "success": true,

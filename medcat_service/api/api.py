@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from flask import Blueprint
-from flask import Response
-from flask import request
-
 import simplejson as json
+from flask import Blueprint, Response, request
 
 from medcat_service.nlp_service import NlpService
-
 
 # define API using Flask Blueprint
 #
@@ -47,7 +43,7 @@ def process(nlp_service: NlpService) -> Response:
         return Response(response=json.dumps(response), status=200)
 
     except Exception as e:
-        Response(response="Internal processing error %d" % e, status=500)
+        return Response(response="Internal processing error %s" % e, status=500)
 
 
 @api.route('/process_bulk', methods=['POST'])
@@ -67,4 +63,4 @@ def process_bulk(nlp_service: NlpService) -> Response:
         return Response(response=json.dumps(response, iterable_as_array=True), status=200)
 
     except Exception as e:
-        Response(response="Internal processing error %d" % e, status=500)
+        return Response(response="Internal processing error %s" % e, status=500)

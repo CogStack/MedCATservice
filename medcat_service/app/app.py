@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from flask import Flask
-
 import logging
 import sys
-import injector
-import flask_injector
 
+import flask_injector
+import injector
+from flask import Flask
+
+from medcat_service.api import api
 from medcat_service.nlp_processor import MedCatProcessor
 from medcat_service.nlp_service import MedCatService, NlpService
-from medcat_service.api import api
 
 
 def setup_logging():
