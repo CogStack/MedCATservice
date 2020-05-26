@@ -107,7 +107,7 @@ The following environment variables are available for tailoring the MedCAT Servi
 - `APP_MODEL_NAME` - an informative name of the model used by MedCAT (optional), 
 - `APP_MODEL_CDB_PATH` - the path to the model's concept database,
 - `APP_MODEL_VOCAB_PATH` - the path to the model's vocabulary,
-- `APP_MODEL_META_PATH_LIST` - the list of paths to meta-annotation models, each separated by `:` (optional),
+- `APP_MODEL_META_PATH_LIST` - the list of paths to meta-annotation models, each separated by `:` character (optional),
 - `APP_BULK_NPROC` - the number of threads used in bulk processing (default: `8`),
 - `APP_TRAINING_MODE` - whether to run the application with MedCAT in training mode (default: `False`).
 
