@@ -9,7 +9,7 @@ RUN pip install -r requirements.txt
 
 # Get the spacy model
 RUN python -m spacy download en_core_web_sm
-RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.3/en_core_sci_md-0.2.3.tar.gz
+RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.2.4/en_core_sci_md-0.2.4.tar.gz
 
 # copy the remaining files
 COPY . /cat

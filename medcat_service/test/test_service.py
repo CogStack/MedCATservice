@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import unittest
+import json
 import logging
 import os
-import json
-import medcat_service.test.common as common
+import unittest
 
+import medcat_service.test.common as common
 from medcat_service.app import app as medcat_app
 
 
@@ -38,12 +38,18 @@ class TestMedcatService(unittest.TestCase):
     def _setup_medcat_processor(cls, config=None):
         # TODO: these parameters need to be externalized into config file and a custom MedCAT processor created here
         if "APP_MODEL_CDB_PATH" not in os.environ:
-            cls.log.warning("Env variable: 'APP_MODEL_CDB_PATH': not set -- setting to default: './models/medmen/cdb.dat'")
+            cls.log.warning("""Env variable: 'APP_MODEL_CDB_PATH': not set
+                             "-- setting to default: './models/medmen/cdb.dat'""")
             os.environ["APP_MODEL_CDB_PATH"] = "./models/medmen/cdb.dat"
 
         if "APP_MODEL_VOCAB_PATH" not in os.environ:
             cls.log.warning("OS ENV: APP_MODEL_VOCAB_PATH: not set -- setting to default: './models/medmen/vocab.dat'")
             os.environ["APP_MODEL_VOCAB_PATH"] = "./models/medmen/vocab.dat"
+
+        if "APP_MODEL_META_PATH_LIST" not in os.environ:
+            cls.log.warning("""OS ENV: APP_MODEL_META_PATH_LIST: not set -- setting to
+                                default: './models/medmen/mc_status'""")
+            os.environ["APP_MODEL_META_PATH_LIST"] = "./models/medmen/mc_status"
 
         if "APP_BULK_NPROC" not in os.environ:
             cls.log.warning("OS ENV: APP_BULK_NPROC: not set -- setting to default: 8")

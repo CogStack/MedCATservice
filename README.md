@@ -27,7 +27,7 @@ There are two scripts provided implementing starting the application:
 
 ## Running in a Docker container
 
-The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the Docker Hub (`cogstacksystems/medcatservice:latest`) or build manually using the provided `Dockerfile`. 
+The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the Docker Hub (`cogstacksystems/medcat-service:latest`) or build manually using the provided `Dockerfile`. 
 Please note that by default the built docker image will run the Flask application in 'production' mode running `start-service-prod.sh` script.
 
 To build the Docker image manually:
@@ -40,7 +40,7 @@ To run the container using the built image:
 docker run -it -p 5000:5000 \
   --env-file=envs/env_app --env-file=envs/env_medcat \
   -v <models-local-dir>:/cat/models:ro \
-  cogstacksystems/medcatservice:latest
+  cogstacksystems/medcat-service:latest
 ```
 
 By default the MedCAT service will be running on port `5000`. MedCAT models will be mounted from local directory `<models-local-dir>` into the container at `/cat/models`. 
@@ -54,16 +54,17 @@ Assuming that the application is running on the `localhost` with the API exposed
 ```
 curl -XPOST http://localhost:5000/api/process \
   -H 'Content-Type: application/json' \
-  -d '{"content":{"text":"lung cancer diagnosis"}}'
+  -d '{"content":{"text":"The patient was diagnosed with leukemia."}}'
 ```
 
 and the received result:
 ```
 {
   "result": {
-    "text": "the patient was diagnosed with leukemia",
+    "text": "The patient was diagnosed with leukemia.",
     "annotations": [
       {
+        "pretty_name": "leukemia",
         "cui": "C0023418",
         "tui": "T191",
         "type": "Neoplastic Process",
@@ -71,11 +72,9 @@ and the received result:
         "acc": "1",
         "start": 31,
         "end": 39,
+        "info": {},
         "id": "0",
-        "pretty_name": "leukemia",
-        "icd10": "",
-        "umls": "",
-        "snomed": ""
+        "meta_anns": {}
       }
     ],
     "success": true,
@@ -108,6 +107,7 @@ The following environment variables are available for tailoring the MedCAT Servi
 - `APP_MODEL_NAME` - an informative name of the model used by MedCAT (optional), 
 - `APP_MODEL_CDB_PATH` - the path to the model's concept database,
 - `APP_MODEL_VOCAB_PATH` - the path to the model's vocabulary,
+- `APP_MODEL_META_PATH_LIST` - the list of paths to meta-annotation models, each separated by `:` character (optional),
 - `APP_BULK_NPROC` - the number of threads used in bulk processing (default: `8`),
 - `APP_TRAINING_MODE` - whether to run the application with MedCAT in training mode (default: `False`).
 
