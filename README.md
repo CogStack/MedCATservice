@@ -27,7 +27,7 @@ There are two scripts provided implementing starting the application:
 
 ## Running in a Docker container
 
-The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the Docker Hub (`cogstacksystems/medcatservice:latest`) or build manually using the provided `Dockerfile`. 
+The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the Docker Hub (`cogstacksystems/medcat-service:latest`) or build manually using the provided `Dockerfile`. 
 Please note that by default the built docker image will run the Flask application in 'production' mode running `start-service-prod.sh` script.
 
 To build the Docker image manually:
@@ -40,7 +40,7 @@ To run the container using the built image:
 docker run -it -p 5000:5000 \
   --env-file=envs/env_app --env-file=envs/env_medcat \
   -v <models-local-dir>:/cat/models:ro \
-  cogstacksystems/medcatservice:latest
+  cogstacksystems/medcat-service:latest
 ```
 
 By default the MedCAT service will be running on port `5000`. MedCAT models will be mounted from local directory `<models-local-dir>` into the container at `/cat/models`. 
