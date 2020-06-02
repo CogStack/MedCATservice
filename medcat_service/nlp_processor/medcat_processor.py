@@ -147,15 +147,26 @@ class MedCatProcessor(NlpProcessor):
             raise Exception("Concept database (env: APP_MODEL_CDB_PATH) not specified")
 
         # Vocabulary and Concept Database are mandatory
+        self.log.debug('Loading VOCAB ...')
         vocab = Vocab()
         vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH"))
 
+        self.log.debug('Loading CDB ...')
         cdb = CDB()
         cdb.load_dict(path=os.getenv("APP_MODEL_CDB_PATH"))
+
+        # Apply CUI filter if provided
+        if os.getenv("APP_MODEL_CUI_FILTER_PATH") is not None:
+            self.log.debug('Applying CDB CUI filter ...')
+            with open(os.getenv("APP_MODEL_CUI_FILTER_PATH")) as cui_file:
+                all_lines = (line.rstrip() for line in cui_file)
+                selected_cuis = [line for line in all_lines if line]  # filter blank lines
+                cdb.filter_by_cui(selected_cuis)
 
         # Meta-annotation models are optional
         meta_models = []
         if os.getenv("APP_MODEL_META_PATH_LIST") is not None:
+            self.log.debug('Loading META annotations ...')
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(':'):
                 m = MetaCAT(save_dir=model_path)
                 m.load()
