@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import os
+import os, json
 from datetime import datetime, timezone
 
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.meta_cat import MetaCAT
 from medcat.utils.vocab import Vocab
-
+from medcat.utils.helpers import run_cv
 
 class NlpProcessor:
     """
@@ -133,6 +133,30 @@ class MedCatProcessor(NlpProcessor):
                                             nproc=nproc, batch_size=batch_size)
 
         return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
+
+
+    def retrain_medcat(self, content, replace_cdb):
+        """
+        Retrains Medcat and redeploys model
+        """
+
+        with open('/cat/models/data.json', 'w') as f:
+            json.dump(content, f)
+        
+        DATA_PATH = '/cat/models/data.json'
+        CDB_PATH = '/cat/models/cdb.dat'
+        VOCAB_PATH = '/cat/models/vocab.dat'
+
+        self.log.info('Retraining Medcat Started...')
+
+        fps, fns, tps, ps, rs, f1s, cui_counts = run_cv(CDB_PATH, DATA_PATH, VOCAB_PATH)
+
+        # Insert logic here to check for sufficient improvement in accuracies
+        
+        
+        return {'results': [fps, fns, tps, ps, rs, f1s, cui_counts]}
+
+
 
     # helper MedCAT methods
     #
