@@ -10,6 +10,7 @@ from medcat.cdb import CDB
 from medcat.meta_cat import MetaCAT
 from medcat.utils.vocab import Vocab
 from medcat.utils.helpers import run_cv
+import numpy as np
 
 class NlpProcessor:
     """
@@ -149,11 +150,11 @@ class MedCatProcessor(NlpProcessor):
 
         self.log.info('Retraining Medcat Started...')
 
-        fps, fns, tps, ps, rs, f1s, cui_counts = run_cv(CDB_PATH, DATA_PATH, VOCAB_PATH)
+        fps, fns, tps, ps, rs, f1s, cui_counts = MedCatProcessor._run_cv(self, CDB_PATH, DATA_PATH, VOCAB_PATH)
 
-        # Insert logic here to check for sufficient improvement in accuracies
-        
-        
+        self.log.info('Retraining Medcat Completed...')
+
+            
         return {'results': [fps, fns, tps, ps, rs, f1s, cui_counts]}
 
 
@@ -262,3 +263,148 @@ class MedCatProcessor(NlpProcessor):
             return version_line[0].split(' ')[1]
         except Exception:
             raise Exception("Cannot read the MedCAT library version")
+
+    
+    def _run_cv(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1, test_size=0.1, lr=1, groups=None, **kwargs):
+
+        f1s, ps, rs, tps, fns, fps, cui_counts = {}, {}, {}, {}, {}, {}, {}
+        
+        data = json.load(open(data_path))
+        correct_ids = MedCatProcessor._prepareDocumentsForPeformanceAnalysis(data)
+
+        cdb = CDB()
+        cdb.load_dict(cdb_path)
+        vocab = Vocab()
+        vocab.load_dict(path=vocab_path)
+        starting_cat = CAT(cdb, vocab=vocab)
+
+        current_best_f1 = MedCatProcessor._computeF1forDocuments(data, starting_cat, correct_ids)
+
+
+        use_groups = False
+        if groups is not None:
+            use_groups = True
+
+        for _ in range(cv):
+            cdb = CDB()
+            cdb.load_dict(cdb_path)
+            vocab = Vocab()
+            vocab.load_dict(path=vocab_path)
+            cat = CAT(cdb, vocab=vocab)
+            cat.train = False
+            cat.spacy_cat.MIN_ACC = 0.30
+            cat.spacy_cat.MIN_ACC_TH = 0.30
+
+            # Add groups if they exist
+            if groups is not None:
+                for cui in cdb.cui2info.keys():
+                    if "group" in cdb.cui2info[cui]:
+                        del cdb.cui2info[cui]['group']
+                groups = json.load(open("./groups.json"))
+                for k,v in groups.items():
+                    for val in v:
+                        cat.add_cui_to_group(val, k)
+
+
+            fp, fn, tp, p, r, f1, cui_counts, examples = cat.train_supervised(data_path=data_path, reset_cdb=True,
+                                lr=1, test_size=test_size, use_groups=use_groups, nepochs=nepochs, **kwargs)
+
+            for key in f1.keys():
+                if key in f1s:
+                    f1s[key].append(f1[key])
+                else:
+                    f1s[key] = [f1[key]]
+
+                if key in ps:
+                    ps[key].append(p[key])
+                else:
+                    ps[key] = [p[key]]
+
+                if key in rs:
+                    rs[key].append(r[key])
+                else:
+                    rs[key] = [r[key]]
+
+                if key in tps:
+                    tps[key].append(tp.get(key, 0))
+                else:
+                    tps[key] = [tp.get(key, 0)]
+
+                if key in fps:
+                    fps[key].append(fp.get(key, 0))
+                else:
+                    fps[key] = [fp.get(key, 0)]
+
+                if key in fns:
+                    fns[key].append(fn.get(key, 0))
+                else:
+                    fns[key] = [fn.get(key, 0)]
+
+            f1_documents = MedCatProcessor._computeF1forDocuments(data, cat, correct_ids)    
+            self.log.info('Previous F1: ' + str(current_best_f1))
+            self.log.info('New F1: ' + str(f1_documents))
+
+            self.log.info('Determing iff medcat will be replaced...')
+
+            if MedCatProcessor._checkmodelimproved(f1_documents, current_best_f1):
+                self.log.info('Model will be replaced...')  
+                current_best_f1 = f1_documents
+                cat.cdb.save_dict('/cat/models/cdb.dat')
+
+        self.log.info('Retraining Medcat Returning now...')
+        return fps, fns, tps, ps, rs, f1s, cui_counts
+
+    
+    @staticmethod
+    def _computeF1forDocuments(data, cat, correct_ids):
+
+        predictions = {}
+        for document in data['projects'][0]['documents']:
+            results = cat.get_entities(document['text'])
+            predictions[document['id']] = [[a['start'], a['end']] for a in results]
+
+        predictions_counts = np.sum([len(prediction) for prediction in predictions.values()])
+        ground_counts = np.sum([len(ground) for ground in correct_ids.values()])
+
+        true_positives_documents = 0
+        for correct_id_key in correct_ids.keys():
+            if correct_id_key in predictions.keys():
+                A = np.array(correct_ids[correct_id_key])
+                B = np.array(predictions[correct_id_key])
+                
+                aset = set([tuple(x) for x in A])
+                bset = set([tuple(x) for x in B])
+                true_positives_documents += np.array([x for x in aset & bset]).shape[0]
+
+                
+        false_positives_documents = predictions_counts - true_positives_documents
+        false_negative_documents = ground_counts - true_positives_documents
+
+        precision_documents = (true_positives_documents) / (true_positives_documents + false_positives_documents)
+        recall_documents = (true_positives_documents) / (true_positives_documents + false_negative_documents)
+        
+
+        f1_documents = 2*((precision_documents*recall_documents)/ precision_documents + recall_documents)
+        return f1_documents
+
+
+    @staticmethod
+    def _prepareDocumentsForPeformanceAnalysis(data):
+        
+        correct_ids = {}
+        for document in data['projects'][0]['documents']:
+            for entry in document['annotations']:
+                if entry['correct'] == True:
+                    if document['id'] not in correct_ids:
+                        correct_ids[document['id']] = []
+                    correct_ids[document['id']].append([entry['start'], entry['end']])
+
+        return correct_ids
+
+    @staticmethod
+    def _checkmodelimproved(f1_model_a, f1_model_b):
+
+        if f1_model_a > f1_model_b:
+            return True
+        else:
+            return False
