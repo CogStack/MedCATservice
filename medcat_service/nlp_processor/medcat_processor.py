@@ -16,7 +16,7 @@ class NlpProcessor:
     """
     This class defines an interface for NLP Processor
     """
-    def __init__(self):
+    def __init__(self): 
         self.log = logging.getLogger(self.__class__.__name__)
 
     def get_app_info(self):
@@ -344,12 +344,16 @@ class MedCatProcessor(NlpProcessor):
             self.log.info('Previous F1: ' + str(current_best_f1))
             self.log.info('New F1: ' + str(f1_documents))
 
-            self.log.info('Determing iff medcat will be replaced...')
+            self.log.info('Determing if medcat will be replaced...')
 
             if MedCatProcessor._checkmodelimproved(f1_documents, current_best_f1):
                 self.log.info('Model will be replaced...')  
                 current_best_f1 = f1_documents
-                cat.cdb.save_dict('/cat/models/cdb.dat')
+
+                try:
+                    cat.cdb.save_dict('/cat/models/cdb_new.dat')
+                except Exception as e:
+                    return Response(response="Internal processing error %s" % e, status=500)
 
         self.log.info('Retraining Medcat Returning now...')
         return fps, fns, tps, ps, rs, f1s, cui_counts
