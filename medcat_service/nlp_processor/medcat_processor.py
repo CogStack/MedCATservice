@@ -278,7 +278,7 @@ class MedCatProcessor(NlpProcessor):
         vocab.load_dict(path=vocab_path)
         starting_cat = CAT(cdb, vocab=vocab)
 
-        current_best_f1 = MedCatProcessor._computeF1forDocuments(data, starting_cat, correct_ids)
+        current_best_f1 = MedCatProcessor._computeF1forDocuments(self, data, starting_cat, correct_ids)
 
 
         use_groups = False
@@ -340,7 +340,7 @@ class MedCatProcessor(NlpProcessor):
                 else:
                     fns[key] = [fn.get(key, 0)]
 
-            f1_documents = MedCatProcessor._computeF1forDocuments(data, cat, correct_ids)    
+            f1_documents = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)    
             self.log.info('Previous F1: ' + str(current_best_f1))
             self.log.info('New F1: ' + str(f1_documents))
 
@@ -359,9 +359,9 @@ class MedCatProcessor(NlpProcessor):
         return fps, fns, tps, ps, rs, f1s, cui_counts
 
     
-    @staticmethod
-    def _computeF1forDocuments(data, cat, correct_ids):
-
+    def _computeF1forDocuments(self, data, cat, correct_ids):
+        
+        self.log.info('Computing f1s')
         predictions = {}
         for document in data['projects'][0]['documents']:
             results = cat.get_entities(document['text'])
@@ -384,11 +384,20 @@ class MedCatProcessor(NlpProcessor):
         false_positives_documents = predictions_counts - true_positives_documents
         false_negative_documents = ground_counts - true_positives_documents
 
-        precision_documents = (true_positives_documents) / (true_positives_documents + false_positives_documents)
-        recall_documents = (true_positives_documents) / (true_positives_documents + false_negative_documents)
-        
+        if (true_positives_documents + false_positives_documents) == 0:
+            precision_documents = 0
+        else:
+            precision_documents = (true_positives_documents) / (true_positives_documents + false_positives_documents)
 
-        f1_documents = 2*((precision_documents*recall_documents)/ precision_documents + recall_documents)
+        if (true_positives_documents + false_negative_documents) == 0:
+            recall_documents = 0
+        else:
+            recall_documents = (true_positives_documents) / (true_positives_documents + false_negative_documents)
+
+        if (precision_documents + recall_documents) == 0:
+            f1_documents = 0
+        else:
+            f1_documents = 2*((precision_documents*recall_documents)/ precision_documents + recall_documents)
         return f1_documents
 
 
