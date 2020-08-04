@@ -186,7 +186,6 @@ class MedCatProcessor(NlpProcessor):
                 selected_cuis = [line for line in all_lines if line]  # filter blank lines
                 cdb.filter_by_cui(selected_cuis)
 
-
         # Meta-annotation models are optional
         meta_models = []
         if os.getenv("APP_MODEL_META_PATH_LIST") is not None:
