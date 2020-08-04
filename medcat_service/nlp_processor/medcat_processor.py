@@ -357,11 +357,10 @@ class MedCatProcessor(NlpProcessor):
             if MedCatProcessor._checkmodelimproved(f1_documents, current_best_f1):
                 self.log.info('Model will be replaced...')  
                 current_best_f1 = f1_documents
-
-                try:
-                    cat.cdb.save_dict('/cat/models/cdb_new.dat')
-                except Exception as e:
-                    return Response(response="Internal processing error %s" % e, status=500)
+                
+                cat.cdb.save('/cat/models/cdb_new.dat')
+                # except Exception as e:
+                #     return Response(response="Internal processing error %s" % e, status=500)
 
         self.log.info('Retraining Medcat Returning now...')
         return fps, fns, tps, ps, rs, f1s, cui_counts
