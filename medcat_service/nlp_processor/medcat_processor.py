@@ -294,20 +294,16 @@ class MedCatProcessor(NlpProcessor):
             use_groups = True
 
         for _ in range(cv):
-            cdb = CDB()
-            cdb.load_dict(cdb_path)
-            vocab = Vocab()
-            vocab.load_dict(path=vocab_path)
-            cat = CAT(cdb, vocab=vocab)
+            cat = self._create_cat()
             cat.train = False
             cat.spacy_cat.MIN_ACC = 0.30
             cat.spacy_cat.MIN_ACC_TH = 0.30
 
             # Add groups if they exist
             if groups is not None:
-                for cui in cdb.cui2info.keys():
-                    if "group" in cdb.cui2info[cui]:
-                        del cdb.cui2info[cui]['group']
+                for cui in cat.cdb.cui2info.keys():
+                    if "group" in cat.cdb.cui2info[cui]:
+                        del cat.cdb.cui2info[cui]['group']
                 groups = json.load(open("./groups.json"))
                 for k,v in groups.items():
                     for val in v:
