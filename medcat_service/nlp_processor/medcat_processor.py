@@ -275,147 +275,106 @@ class MedCatProcessor(NlpProcessor):
     
     def _run_cv(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1, test_size=0.1, lr=1, groups=None, **kwargs):
 
-        f1s, ps, rs, tps, fns, fps, cui_counts = {}, {}, {}, {}, {}, {}, {}
-        
         data = json.load(open(data_path))
-        correct_ids = MedCatProcessor._prepareDocumentsForPeformanceAnalysis(data)
+        correct_ids = self._prepareDocumentsForPeformanceAnalysis(data) 
 
         cdb = CDB()
         cdb.load_dict(cdb_path)
         vocab = Vocab()
         vocab.load_dict(path=vocab_path)
-        starting_cat = CAT(cdb, vocab=vocab)
+        cat = CAT(cdb, vocab=vocab)
 
-        current_best_f1 = MedCatProcessor._computeF1forDocuments(self, data, starting_cat, correct_ids)
+        p_base, r_base, f1_base, tp_dict_base, fp_dict_base, fn_dict_base = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)
+        self.log.info('Base model F1: ' + str(f1_base))
 
+        cat.train = True
+        cat.spacy_cat.MIN_ACC = 0.30
+        cat.spacy_cat.MIN_ACC_TH = 0.30
 
-        use_groups = False
-        if groups is not None:
-            use_groups = True
+        self.log.info('Starting supervised training...')
+        cat.train_supervised(data_path=data_path, lr=1, test_size=0.1, use_groups=None, nepochs=3)
+        p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)
 
-        for _ in range(cv):
-            cat = self._create_cat()
-            cat.train = False
-            cat.spacy_cat.MIN_ACC = 0.30
-            cat.spacy_cat.MIN_ACC_TH = 0.30
+        self.log.info('Trained model F1: ' + str(f1))
 
-            # Add groups if they exist
-            if groups is not None:
-                for cui in cat.cdb.cui2info.keys():
-                    if "group" in cat.cdb.cui2info[cui]:
-                        del cat.cdb.cui2info[cui]['group']
-                groups = json.load(open("./groups.json"))
-                for k,v in groups.items():
-                    for val in v:
-                        cat.add_cui_to_group(val, k)
-
-
-            fp, fn, tp, p, r, f1, cui_counts, examples = cat.train_supervised(data_path=data_path, reset_cdb=True,
-                                lr=1, test_size=test_size, use_groups=use_groups, nepochs=nepochs, **kwargs)
-
-            for key in f1.keys():
-                if key in f1s:
-                    f1s[key].append(f1[key])
-                else:
-                    f1s[key] = [f1[key]]
-
-                if key in ps:
-                    ps[key].append(p[key])
-                else:
-                    ps[key] = [p[key]]
-
-                if key in rs:
-                    rs[key].append(r[key])
-                else:
-                    rs[key] = [r[key]]
-
-                if key in tps:
-                    tps[key].append(tp.get(key, 0))
-                else:
-                    tps[key] = [tp.get(key, 0)]
-
-                if key in fps:
-                    fps[key].append(fp.get(key, 0))
-                else:
-                    fps[key] = [fp.get(key, 0)]
-
-                if key in fns:
-                    fns[key].append(fn.get(key, 0))
-                else:
-                    fns[key] = [fn.get(key, 0)]
-
-        f1_documents = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)    
-        self.log.info('Previous F1: ' + str(current_best_f1))
-        self.log.info('New F1: ' + str(f1_documents))
-
-        self.log.info('Determing if medcat will be replaced...')
-
-        if MedCatProcessor._checkmodelimproved(f1_documents, current_best_f1):
-            self.log.info('Model will be replaced...')  
-            current_best_f1 = f1_documents
+        if MedCatProcessor._checkmodelimproved(f1, f1_base):
+            self.log.info('Model will be saved...')  
             
             cat.cdb.save_dict('/cat/models/cdb_new.dat')
-            # except Exception as e:
-            #     return Response(response="Internal processing error %s" % e, status=500)
 
-        self.log.info('Retraining Medcat Returning now...')
-        return fps, fns, tps, ps, rs, f1s, cui_counts
+        self.log.info('Completed Retraining Medcat...')
+        return p, r, f1, tp_dict, fp_dict, fn_dict
 
-    
+
     def _computeF1forDocuments(self, data, cat, correct_ids):
         
-        self.log.info('Computing f1s')
-        predictions = {}
-        for document in data['projects'][0]['documents']:
-            results = cat.get_entities(document['text'])
-            predictions[document['id']] = [[a['start'], a['end']] for a in results]
+        true_positives_dict, false_positives_dict, false_negatives_dict  = {}, {}, {}
+        true_positive_no, false_positive_no, false_negative_no = 0, 0, 0
 
-        predictions_counts = np.sum([len(prediction) for prediction in predictions.values()])
-        ground_counts = np.sum([len(ground) for ground in correct_ids.values()])
+        for project in data['projects']:
 
-        true_positives_documents = 0
-        for correct_id_key in correct_ids.keys():
-            if correct_id_key in predictions.keys():
-                A = np.array(correct_ids[correct_id_key])
-                B = np.array(predictions[correct_id_key])
+            predictions = {}
+            documents = project['documents']
+            true_positives_dict[project['id']], false_positives_dict[project['id']], false_negatives_dict[project['id']] = {}, {}, {}
+
+            for document in documents:
+                true_positives_dict[project['id']][document['id']], false_positives_dict[project['id']][document['id']], false_negatives_dict[project['id']][document['id']] = {}, {}, {}
+
+                results = cat.get_entities(document['text'])
+                predictions[document['id']] = [[a['start'], a['end'], a['cui']] for a in results]
+
+                true_positives, false_positives, false_negatives = self._getAccuraciesforDocument(correct_ids[project['id']][document['id']], predictions[document['id']])        
+                true_positive_no += len(true_positives)
+                false_positive_no += len(false_positives)
+                false_negative_no += len(false_negatives)
+
+                true_positives_dict[project['id']][document['id']] = true_positives
+                false_positives_dict[project['id']][document['id']] = false_positives
+                false_negatives_dict[project['id']][document['id']] = false_negatives
                 
-                aset = set([tuple(x) for x in A])
-                bset = set([tuple(x) for x in B])
-                true_positives_documents += np.array([x for x in aset & bset]).shape[0]
-
-                
-        false_positives_documents = predictions_counts - true_positives_documents
-        false_negative_documents = ground_counts - true_positives_documents
-
-        if (true_positives_documents + false_positives_documents) == 0:
-            precision_documents = 0
+        if (true_positive_no + false_positive_no) == 0:
+            precision = 0
         else:
-            precision_documents = (true_positives_documents) / (true_positives_documents + false_positives_documents)
-
-        if (true_positives_documents + false_negative_documents) == 0:
-            recall_documents = 0
+            precision = true_positive_no / (true_positive_no + false_positive_no)
+        if (true_positive_no + false_negative_no) == 0:
+            recall = 0
         else:
-            recall_documents = (true_positives_documents) / (true_positives_documents + false_negative_documents)
-
-        if (precision_documents + recall_documents) == 0:
-            f1_documents = 0
+            recall = true_positive_no / (true_positive_no + false_negative_no)
+        if (precision + recall) == 0:
+            f1 = 0
         else:
-            f1_documents = 2*((precision_documents*recall_documents)/ precision_documents + recall_documents)
-        return f1_documents
+            f1 = 2*((precision*recall)/ (precision + recall))
+        
+        return precision, recall, f1, true_positives_dict, false_positives_dict, false_negatives_dict
 
 
     @staticmethod
     def _prepareDocumentsForPeformanceAnalysis(data):
         
         correct_ids = {}
-        for document in data['projects'][0]['documents']:
-            for entry in document['annotations']:
-                if entry['correct'] == True:
-                    if document['id'] not in correct_ids:
-                        correct_ids[document['id']] = []
-                    correct_ids[document['id']].append([entry['start'], entry['end']])
+        for project in data['projects']:
+            correct_ids[project['id']] = {}
+            
+            for document in project['documents']:
+                for entry in document['annotations']:
+                    if entry['correct'] == True:
+                        if document['id'] not in correct_ids[project['id']]:
+                            correct_ids[project['id']][document['id']] = []
+                        correct_ids[project['id']][document['id']].append([entry['start'], entry['end'], entry['cui']])
 
         return correct_ids
+
+    @staticmethod
+    def _getAccuraciesforDocument(prediction, correct_ids): 
+        
+        tup1 = list(map(tuple, correct_ids))
+        tup2 = list(map(tuple, prediction))
+        
+        true_positives =  list(map(list, set(tup1).intersection(tup2)))
+        false_positives = list(map(list, set(tup1).difference(tup2)))
+        false_negatives = list(map(list, set(tup2).difference(tup1)))
+        
+        return true_positives, false_positives, false_negatives
 
     @staticmethod
     def _checkmodelimproved(f1_model_a, f1_model_b):
