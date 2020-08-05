@@ -277,13 +277,15 @@ class MedCatProcessor(NlpProcessor):
         data = json.load(open(data_path))
         correct_ids = self._prepareDocumentsForPeformanceAnalysis(data) 
 
-        cdb = CDB()
-        cdb.load_dict(cdb_path)
-        vocab = Vocab()
-        vocab.load_dict(path=vocab_path)
-        cat = CAT(cdb, vocab=vocab)
+        # cdb = CDB()
+        # cdb.load_dict(cdb_path)
+        # vocab = Vocab()
+        # vocab.load_dict(path=vocab_path)
+        # cat = CAT(cdb, vocab=vocab)
 
-        p_base, r_base, f1_base, tp_dict_base, fp_dict_base, fn_dict_base = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)
+        cat = MedCatProcessor._create_cat(self)
+
+        p_base, r_base, f1_base, tp_dict_base, fp_dict_base, fn_dict_base = MedCatProcessor._computeF1forDocuments(self, data, self.cat, correct_ids)
         self.log.info('Base model F1: ' + str(f1_base))
 
         cat.train = True
@@ -291,7 +293,11 @@ class MedCatProcessor(NlpProcessor):
         cat.spacy_cat.MIN_ACC_TH = 0.30
 
         self.log.info('Starting supervised training...')
-        cat.train_supervised(data_path=data_path, lr=1, test_size=0.1, use_groups=None, nepochs=3)
+
+        try:
+            cat.train_supervised(data_path=data_path, lr=1, test_size=0.1, use_groups=None, nepochs=3)
+        except Exception:
+            self.log.info('Did not complete all supervised training')
 
         p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)
 
