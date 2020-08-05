@@ -9,7 +9,6 @@ from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.meta_cat import MetaCAT
 from medcat.utils.vocab import Vocab
-from medcat.utils.helpers import run_cv
 import numpy as np
 
 class NlpProcessor:
@@ -150,12 +149,12 @@ class MedCatProcessor(NlpProcessor):
 
         self.log.info('Retraining Medcat Started...')
 
-        fps, fns, tps, ps, rs, f1s, cui_counts = MedCatProcessor._run_cv(self, CDB_PATH, DATA_PATH, VOCAB_PATH)
+        p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._retrain_supervised(self, CDB_PATH, DATA_PATH, VOCAB_PATH)
 
         self.log.info('Retraining Medcat Completed...')
 
             
-        return {'results': [fps, fns, tps, ps, rs, f1s, cui_counts]}
+        return {'results': [p, r, f1, tp_dict, fp_dict, fn_dict]}
 
 
 
@@ -273,7 +272,7 @@ class MedCatProcessor(NlpProcessor):
             raise Exception("Cannot read the MedCAT library version")
 
     
-    def _run_cv(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1, test_size=0.1, lr=1, groups=None, **kwargs):
+    def _retrain_supervised(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1, test_size=0.1, lr=1, groups=None, **kwargs):
 
         data = json.load(open(data_path))
         correct_ids = self._prepareDocumentsForPeformanceAnalysis(data) 
@@ -293,6 +292,7 @@ class MedCatProcessor(NlpProcessor):
 
         self.log.info('Starting supervised training...')
         cat.train_supervised(data_path=data_path, lr=1, test_size=0.1, use_groups=None, nepochs=3)
+
         p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)
 
         self.log.info('Trained model F1: ' + str(f1))
