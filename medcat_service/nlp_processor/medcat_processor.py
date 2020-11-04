@@ -54,7 +54,10 @@ class MedCatProcessor(NlpProcessor):
         self.app_model = os.getenv("APP_MODEL_NAME", 'unknown')
 
         self.cat = self._create_cat()
-        self.cat.spacy_cat.train = os.getenv("APP_TRAINING_MODE", False)
+
+        self.cat.spacy_cat.train = False
+        if os.getenv("APP_TRAINING_MODE") == "True":
+            self.cat.spacy_cat.train = True
 
         self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
