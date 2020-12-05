@@ -54,7 +54,10 @@ class MedCatProcessor(NlpProcessor):
         self.app_model = os.getenv("APP_MODEL_NAME", 'unknown')
 
         self.cat = self._create_cat()
-        self.cat.spacy_cat.train = os.getenv("APP_TRAINING_MODE", False)
+
+        self.cat.spacy_cat.train = False
+        if os.getenv("APP_TRAINING_MODE") == "True":
+            self.cat.spacy_cat.train = True
 
         self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
@@ -171,9 +174,11 @@ class MedCatProcessor(NlpProcessor):
             raise Exception("Concept database (env: APP_MODEL_CDB_PATH) not specified")
 
         # Vocabulary and Concept Database are mandatory
+        self.log.debug('Loading VOCAB ...')
         vocab = Vocab()
         vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH"))
 
+        self.log.debug('Loading CDB ...')
         cdb = CDB()
         cdb.load_dict(path=os.getenv("APP_MODEL_CDB_PATH"))
 
@@ -188,6 +193,7 @@ class MedCatProcessor(NlpProcessor):
         # Meta-annotation models are optional
         meta_models = []
         if os.getenv("APP_MODEL_META_PATH_LIST") is not None:
+            self.log.debug('Loading META annotations ...')
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(':'):
                 m = MetaCAT(save_dir=model_path)
                 m.load()
