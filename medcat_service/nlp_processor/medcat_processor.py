@@ -3,6 +3,7 @@
 
 import logging
 import os
+import json
 from datetime import datetime, timezone
 
 from medcat.cat import CAT
@@ -137,6 +138,26 @@ class MedCatProcessor(NlpProcessor):
 
         return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
 
+    def retrain_medcat(self, content, replace_cdb):
+        """
+        Retrains Medcat and redeploys model
+        """
+
+        with open('/cat/models/data.json', 'w') as f:
+            json.dump(content, f)
+
+        DATA_PATH = '/cat/models/data.json'
+        CDB_PATH = '/cat/models/cdb.dat'
+        VOCAB_PATH = '/cat/models/vocab.dat'
+
+        self.log.info('Retraining Medcat Started...')
+
+        p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._retrain_supervised(self, CDB_PATH, DATA_PATH, VOCAB_PATH)
+
+        self.log.info('Retraining Medcat Completed...')
+
+        return {'results': [p, r, f1, tp_dict, fp_dict, fn_dict]}
+
     # helper MedCAT methods
     #
     def _create_cat(self):
@@ -252,3 +273,124 @@ class MedCatProcessor(NlpProcessor):
             return version_line[0].split(' ')[1]
         except Exception:
             raise Exception("Cannot read the MedCAT library version")
+
+    def _retrain_supervised(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1,
+                            test_size=0.1, lr=1, groups=None, **kwargs):
+
+        data = json.load(open(data_path))
+        correct_ids = self._prepareDocumentsForPeformanceAnalysis(data)
+
+        # cdb = CDB()
+        # cdb.load_dict(cdb_path)
+        # vocab = Vocab()
+        # vocab.load_dict(path=vocab_path)
+        # cat = CAT(cdb, vocab=vocab)
+
+        cat = MedCatProcessor._create_cat(self)
+
+        f1_base = MedCatProcessor._computeF1forDocuments(self, data, self.cat, correct_ids)[2]
+        self.log.info('Base model F1: ' + str(f1_base))
+
+        cat.train = True
+        cat.spacy_cat.MIN_ACC = 0.30
+        cat.spacy_cat.MIN_ACC_TH = 0.30
+
+        self.log.info('Starting supervised training...')
+
+        try:
+            cat.train_supervised(data_path=data_path, lr=1, test_size=0.1, use_groups=None, nepochs=3)
+        except Exception:
+            self.log.info('Did not complete all supervised training')
+
+        p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)
+
+        self.log.info('Trained model F1: ' + str(f1))
+
+        if MedCatProcessor._checkmodelimproved(f1, f1_base):
+            self.log.info('Model will be saved...')
+
+            cat.cdb.save_dict('/cat/models/cdb_new.dat')
+
+        self.log.info('Completed Retraining Medcat...')
+        return p, r, f1, tp_dict, fp_dict, fn_dict
+
+    def _computeF1forDocuments(self, data, cat, correct_ids):
+
+        true_positives_dict, false_positives_dict, false_negatives_dict = {}, {}, {}
+        true_positive_no, false_positive_no, false_negative_no = 0, 0, 0
+
+        for project in data['projects']:
+
+            predictions = {}
+            documents = project['documents']
+            true_positives_dict[project['id']] = {}
+            false_positives_dict[project['id']] = {}
+            false_negatives_dict[project['id']] = {}
+
+            for document in documents:
+                true_positives_dict[project['id']][document['id']] = {}
+                false_positives_dict[project['id']][document['id']] = {}
+                false_negatives_dict[project['id']][document['id']] = {}
+
+                results = cat.get_entities(document['text'])
+                predictions[document['id']] = [[a['start'], a['end'], a['cui']] for a in results]
+
+                tps, fps, fns = self._getAccuraciesforDocument(correct_ids[project['id']][document['id']],
+                                                               predictions[document['id']])
+                true_positive_no += len(tps)
+                false_positive_no += len(fps)
+                false_negative_no += len(fns)
+
+                true_positives_dict[project['id']][document['id']] = tps
+                false_positives_dict[project['id']][document['id']] = fps
+                false_negatives_dict[project['id']][document['id']] = fns
+
+        if (true_positive_no + false_positive_no) == 0:
+            precision = 0
+        else:
+            precision = true_positive_no / (true_positive_no + false_positive_no)
+        if (true_positive_no + false_negative_no) == 0:
+            recall = 0
+        else:
+            recall = true_positive_no / (true_positive_no + false_negative_no)
+        if (precision + recall) == 0:
+            f1 = 0
+        else:
+            f1 = 2*((precision*recall) / (precision + recall))
+
+        return precision, recall, f1, true_positives_dict, false_positives_dict, false_negatives_dict
+
+    @staticmethod
+    def _prepareDocumentsForPeformanceAnalysis(data):
+        correct_ids = {}
+        for project in data['projects']:
+            correct_ids[project['id']] = {}
+
+            for document in project['documents']:
+                for entry in document['annotations']:
+                    if entry['correct']:
+                        if document['id'] not in correct_ids[project['id']]:
+                            correct_ids[project['id']][document['id']] = []
+                        correct_ids[project['id']][document['id']].append([entry['start'], entry['end'], entry['cui']])
+
+        return correct_ids
+
+    @staticmethod
+    def _getAccuraciesforDocument(prediction, correct_ids):
+
+        tup1 = list(map(tuple, correct_ids))
+        tup2 = list(map(tuple, prediction))
+
+        true_positives = list(map(list, set(tup1).intersection(tup2)))
+        false_positives = list(map(list, set(tup1).difference(tup2)))
+        false_negatives = list(map(list, set(tup2).difference(tup1)))
+
+        return true_positives, false_positives, false_negatives
+
+    @staticmethod
+    def _checkmodelimproved(f1_model_a, f1_model_b):
+
+        if f1_model_a > f1_model_b:
+            return True
+        else:
+            return False
