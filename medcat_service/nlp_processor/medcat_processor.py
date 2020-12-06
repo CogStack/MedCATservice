@@ -2,23 +2,24 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import os, json
+import os
+import json
 from datetime import datetime, timezone
 
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.meta_cat import MetaCAT
 from medcat.utils.vocab import Vocab
-import numpy as np
+
 
 class NlpProcessor:
     """
     This class defines an interface for NLP Processor
     """
-    def __init__(self): 
+    def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
 
-    def get_app_info(self): 
+    def get_app_info(self):
         pass
 
     def process_content(self, content):
@@ -137,7 +138,6 @@ class MedCatProcessor(NlpProcessor):
 
         return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
 
-
     def retrain_medcat(self, content, replace_cdb):
         """
         Retrains Medcat and redeploys model
@@ -145,7 +145,7 @@ class MedCatProcessor(NlpProcessor):
 
         with open('/cat/models/data.json', 'w') as f:
             json.dump(content, f)
-        
+
         DATA_PATH = '/cat/models/data.json'
         CDB_PATH = '/cat/models/cdb.dat'
         VOCAB_PATH = '/cat/models/vocab.dat'
@@ -156,10 +156,7 @@ class MedCatProcessor(NlpProcessor):
 
         self.log.info('Retraining Medcat Completed...')
 
-            
         return {'results': [p, r, f1, tp_dict, fp_dict, fn_dict]}
-
-
 
     # helper MedCAT methods
     #
@@ -277,11 +274,11 @@ class MedCatProcessor(NlpProcessor):
         except Exception:
             raise Exception("Cannot read the MedCAT library version")
 
-    
-    def _retrain_supervised(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1, test_size=0.1, lr=1, groups=None, **kwargs):
+    def _retrain_supervised(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1,
+                            test_size=0.1, lr=1, groups=None, **kwargs):
 
         data = json.load(open(data_path))
-        correct_ids = self._prepareDocumentsForPeformanceAnalysis(data) 
+        correct_ids = self._prepareDocumentsForPeformanceAnalysis(data)
 
         # cdb = CDB()
         # cdb.load_dict(cdb_path)
@@ -291,7 +288,7 @@ class MedCatProcessor(NlpProcessor):
 
         cat = MedCatProcessor._create_cat(self)
 
-        p_base, r_base, f1_base, tp_dict_base, fp_dict_base, fn_dict_base = MedCatProcessor._computeF1forDocuments(self, data, self.cat, correct_ids)
+        f1_base = MedCatProcessor._computeF1forDocuments(self, data, self.cat, correct_ids)[2]
         self.log.info('Base model F1: ' + str(f1_base))
 
         cat.train = True
@@ -310,40 +307,44 @@ class MedCatProcessor(NlpProcessor):
         self.log.info('Trained model F1: ' + str(f1))
 
         if MedCatProcessor._checkmodelimproved(f1, f1_base):
-            self.log.info('Model will be saved...')  
-            
+            self.log.info('Model will be saved...')
+
             cat.cdb.save_dict('/cat/models/cdb_new.dat')
 
         self.log.info('Completed Retraining Medcat...')
         return p, r, f1, tp_dict, fp_dict, fn_dict
 
-
     def _computeF1forDocuments(self, data, cat, correct_ids):
-        
-        true_positives_dict, false_positives_dict, false_negatives_dict  = {}, {}, {}
+
+        true_positives_dict, false_positives_dict, false_negatives_dict = {}, {}, {}
         true_positive_no, false_positive_no, false_negative_no = 0, 0, 0
 
         for project in data['projects']:
 
             predictions = {}
             documents = project['documents']
-            true_positives_dict[project['id']], false_positives_dict[project['id']], false_negatives_dict[project['id']] = {}, {}, {}
+            true_positives_dict[project['id']] = {}
+            false_positives_dict[project['id']] = {}
+            false_negatives_dict[project['id']] = {}
 
             for document in documents:
-                true_positives_dict[project['id']][document['id']], false_positives_dict[project['id']][document['id']], false_negatives_dict[project['id']][document['id']] = {}, {}, {}
+                true_positives_dict[project['id']][document['id']] = {}
+                false_positives_dict[project['id']][document['id']] = {}
+                false_negatives_dict[project['id']][document['id']] = {}
 
                 results = cat.get_entities(document['text'])
                 predictions[document['id']] = [[a['start'], a['end'], a['cui']] for a in results]
 
-                true_positives, false_positives, false_negatives = self._getAccuraciesforDocument(correct_ids[project['id']][document['id']], predictions[document['id']])        
-                true_positive_no += len(true_positives)
-                false_positive_no += len(false_positives)
-                false_negative_no += len(false_negatives)
+                tps, fps, fns = self._getAccuraciesforDocument(correct_ids[project['id']][document['id']],
+                                                               predictions[document['id']])
+                true_positive_no += len(tps)
+                false_positive_no += len(fps)
+                false_negative_no += len(fns)
 
-                true_positives_dict[project['id']][document['id']] = true_positives
-                false_positives_dict[project['id']][document['id']] = false_positives
-                false_negatives_dict[project['id']][document['id']] = false_negatives
-                
+                true_positives_dict[project['id']][document['id']] = tps
+                false_positives_dict[project['id']][document['id']] = fps
+                false_negatives_dict[project['id']][document['id']] = fns
+
         if (true_positive_no + false_positive_no) == 0:
             precision = 0
         else:
@@ -355,21 +356,19 @@ class MedCatProcessor(NlpProcessor):
         if (precision + recall) == 0:
             f1 = 0
         else:
-            f1 = 2*((precision*recall)/ (precision + recall))
-        
-        return precision, recall, f1, true_positives_dict, false_positives_dict, false_negatives_dict
+            f1 = 2*((precision*recall) / (precision + recall))
 
+        return precision, recall, f1, true_positives_dict, false_positives_dict, false_negatives_dict
 
     @staticmethod
     def _prepareDocumentsForPeformanceAnalysis(data):
-        
         correct_ids = {}
         for project in data['projects']:
             correct_ids[project['id']] = {}
-            
+
             for document in project['documents']:
                 for entry in document['annotations']:
-                    if entry['correct'] == True:
+                    if entry['correct']:
                         if document['id'] not in correct_ids[project['id']]:
                             correct_ids[project['id']][document['id']] = []
                         correct_ids[project['id']][document['id']].append([entry['start'], entry['end'], entry['cui']])
@@ -377,15 +376,15 @@ class MedCatProcessor(NlpProcessor):
         return correct_ids
 
     @staticmethod
-    def _getAccuraciesforDocument(prediction, correct_ids): 
-        
+    def _getAccuraciesforDocument(prediction, correct_ids):
+
         tup1 = list(map(tuple, correct_ids))
         tup2 = list(map(tuple, prediction))
-        
-        true_positives =  list(map(list, set(tup1).intersection(tup2)))
+
+        true_positives = list(map(list, set(tup1).intersection(tup2)))
         false_positives = list(map(list, set(tup1).difference(tup2)))
         false_negatives = list(map(list, set(tup2).difference(tup1)))
-        
+
         return true_positives, false_positives, false_negatives
 
     @staticmethod

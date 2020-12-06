@@ -68,7 +68,7 @@ def process_bulk(nlp_service: NlpService) -> Response:
 
 @api.route('/retrain_medcat', methods=['POST'])
 def retrain_medcat(nlp_service: NlpService) -> Response:
-    
+
     payload = request.get_json()
     if payload is None or 'content' not in payload or payload['content'] is None:
         return Response(response="Input Payload should be JSON", status=400)
@@ -80,7 +80,3 @@ def retrain_medcat(nlp_service: NlpService) -> Response:
 
     except Exception as e:
         return Response(response="Internal processing error %s" % e, status=500)
-
-
-
-
