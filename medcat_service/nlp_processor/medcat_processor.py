@@ -3,11 +3,14 @@
 
 import logging
 import os
-import json
 from datetime import datetime, timezone
+import pickle
+import dill
+import json
 
 from medcat.cat import CAT
 from medcat.cdb import CDB
+from medcat.config import Config
 from medcat.meta_cat import MetaCAT
 from medcat.utils.vocab import Vocab
 
@@ -56,9 +59,7 @@ class MedCatProcessor(NlpProcessor):
 
         self.cat = self._create_cat()
 
-        self.cat.spacy_cat.train = False
-        if os.getenv("APP_TRAINING_MODE") == "True":
-            self.cat.spacy_cat.train = True
+        self.cat.train = os.getenv("APP_TRAINING_MODE", False)
 
         self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
@@ -88,7 +89,7 @@ class MedCatProcessor(NlpProcessor):
                           }
             return nlp_result, False
 
-        text = content['text']
+        text = content['text'] 
 
         # assume an that a blank document is a valid document and process it only
         # when it contains any non-blank characters
@@ -97,8 +98,9 @@ class MedCatProcessor(NlpProcessor):
         else:
             entities = []
 
-        nlp_result = {'text': text,
-                      'annotations': entities,
+        nlp_result = {
+                      'text': text,
+                      'annotations': str(entities),
                       'success': True,
                       'timestamp': NlpProcessor._get_timestamp()
                       }
@@ -173,11 +175,37 @@ class MedCatProcessor(NlpProcessor):
         # Vocabulary and Concept Database are mandatory
         self.log.debug('Loading VOCAB ...')
         vocab = Vocab()
-        vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH"))
+
+        with open(os.getenv("APP_MODEL_VOCAB_PATH"), "rb") as f:
+            data = pickle.load(f)
+            if isinstance(data , dict):
+                vocab.__dict__ = data
+            else:
+                vocab = data
 
         self.log.debug('Loading CDB ...')
-        cdb = CDB()
-        cdb.load_dict(path=os.getenv("APP_MODEL_CDB_PATH"))
+
+        conf = Config()
+        conf.general['spacy_model'] = "en_core_sci_lg"
+       
+        cdb = CDB(conf)
+        
+        with open(os.getenv("APP_MODEL_CDB_PATH"), "rb") as f:
+            data = dill.load(f)
+            if isinstance(data , dict):
+                if "cdb" in data.keys() and isinstance(data["cdb"], dict):
+                    cdb.__dict__ = data["cdb"]
+                else:
+                    cdb = data
+
+                if "config" in data.keys() and isinstance(data["config"], dict):
+                    conf.__dict__ = data["config"]
+                else:
+                    conf = data["config"]
+            else:
+                cdb = data
+
+        cdb.config = conf
 
         # Apply CUI filter if provided
         if os.getenv("APP_MODEL_CUI_FILTER_PATH") is not None:
@@ -196,7 +224,7 @@ class MedCatProcessor(NlpProcessor):
                 m.load()
                 meta_models.append(m)
 
-        return CAT(cdb=cdb, vocab=vocab, meta_cats=meta_models)
+        return CAT(cdb=cdb, config=conf, vocab=vocab, meta_cats=meta_models)
 
     # helper generator functions to avoid multiple copies of data
     #
@@ -279,12 +307,6 @@ class MedCatProcessor(NlpProcessor):
 
         data = json.load(open(data_path))
         correct_ids = self._prepareDocumentsForPeformanceAnalysis(data)
-
-        # cdb = CDB()
-        # cdb.load_dict(cdb_path)
-        # vocab = Vocab()
-        # vocab.load_dict(path=vocab_path)
-        # cat = CAT(cdb, vocab=vocab)
 
         cat = MedCatProcessor._create_cat(self)
 
