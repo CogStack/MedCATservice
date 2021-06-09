@@ -89,7 +89,7 @@ class MedCatProcessor(NlpProcessor):
                           }
             return nlp_result, False
 
-        text = content['text'] 
+        text = content['text']
 
         # assume an that a blank document is a valid document and process it only
         # when it contains any non-blank characters
@@ -178,7 +178,7 @@ class MedCatProcessor(NlpProcessor):
 
         with open(os.getenv("APP_MODEL_VOCAB_PATH"), "rb") as f:
             data = pickle.load(f)
-            if isinstance(data , dict):
+            if isinstance(data, dict):
                 vocab.__dict__ = data
             else:
                 vocab = data
@@ -187,12 +187,11 @@ class MedCatProcessor(NlpProcessor):
 
         conf = Config()
         conf.general['spacy_model'] = "en_core_sci_lg"
-       
+
         cdb = CDB(conf)
-        
         with open(os.getenv("APP_MODEL_CDB_PATH"), "rb") as f:
             data = dill.load(f)
-            if isinstance(data , dict):
+            if isinstance(data, dict):
                 if "cdb" in data.keys() and isinstance(data["cdb"], dict):
                     cdb.__dict__ = data["cdb"]
                 else:

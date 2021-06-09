@@ -1,6 +1,4 @@
 medcat~=1.0.30
-scipy~=1.6.3
-spacy==2.3.4
 Flask==1.1.4
 simplejson==3.17.0
 gunicorn==20.1.0
