@@ -4,9 +4,13 @@
 import logging
 import os
 from datetime import datetime, timezone
+import pickle
+import dill
+import json
 
 from medcat.cat import CAT
 from medcat.cdb import CDB
+from medcat.config import Config
 from medcat.meta_cat import MetaCAT
 from medcat.utils.vocab import Vocab
 
@@ -54,7 +58,8 @@ class MedCatProcessor(NlpProcessor):
         self.app_model = os.getenv("APP_MODEL_NAME", 'unknown')
 
         self.cat = self._create_cat()
-        self.cat.spacy_cat.train = os.getenv("APP_TRAINING_MODE", False)
+
+        self.cat.train = os.getenv("APP_TRAINING_MODE", False)
 
         self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
@@ -84,7 +89,7 @@ class MedCatProcessor(NlpProcessor):
                           }
             return nlp_result, False
 
-        text = content['text']
+        text = content['text'] 
 
         # assume an that a blank document is a valid document and process it only
         # when it contains any non-blank characters
@@ -93,8 +98,9 @@ class MedCatProcessor(NlpProcessor):
         else:
             entities = []
 
-        nlp_result = {'text': text,
-                      'annotations': entities,
+        nlp_result = {
+                      'text': text,
+                      'annotations': str(entities),
                       'success': True,
                       'timestamp': NlpProcessor._get_timestamp()
                       }
@@ -134,6 +140,26 @@ class MedCatProcessor(NlpProcessor):
 
         return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
 
+    def retrain_medcat(self, content, replace_cdb):
+        """
+        Retrains Medcat and redeploys model
+        """
+
+        with open('/cat/models/data.json', 'w') as f:
+            json.dump(content, f)
+
+        DATA_PATH = '/cat/models/data.json'
+        CDB_PATH = '/cat/models/cdb.dat'
+        VOCAB_PATH = '/cat/models/vocab.dat'
+
+        self.log.info('Retraining Medcat Started...')
+
+        p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._retrain_supervised(self, CDB_PATH, DATA_PATH, VOCAB_PATH)
+
+        self.log.info('Retraining Medcat Completed...')
+
+        return {'results': [p, r, f1, tp_dict, fp_dict, fn_dict]}
+
     # helper MedCAT methods
     #
     def _create_cat(self):
@@ -149,11 +175,37 @@ class MedCatProcessor(NlpProcessor):
         # Vocabulary and Concept Database are mandatory
         self.log.debug('Loading VOCAB ...')
         vocab = Vocab()
-        vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH"))
+
+        with open(os.getenv("APP_MODEL_VOCAB_PATH"), "rb") as f:
+            data = pickle.load(f)
+            if isinstance(data , dict):
+                vocab.__dict__ = data
+            else:
+                vocab = data
 
         self.log.debug('Loading CDB ...')
-        cdb = CDB()
-        cdb.load_dict(path=os.getenv("APP_MODEL_CDB_PATH"))
+
+        conf = Config()
+        conf.general['spacy_model'] = "en_core_sci_lg"
+       
+        cdb = CDB(conf)
+        
+        with open(os.getenv("APP_MODEL_CDB_PATH"), "rb") as f:
+            data = dill.load(f)
+            if isinstance(data , dict):
+                if "cdb" in data.keys() and isinstance(data["cdb"], dict):
+                    cdb.__dict__ = data["cdb"]
+                else:
+                    cdb = data
+
+                if "config" in data.keys() and isinstance(data["config"], dict):
+                    conf.__dict__ = data["config"]
+                else:
+                    conf = data["config"]
+            else:
+                cdb = data
+
+        cdb.config = conf
 
         # Apply CUI filter if provided
         if os.getenv("APP_MODEL_CUI_FILTER_PATH") is not None:
@@ -172,7 +224,7 @@ class MedCatProcessor(NlpProcessor):
                 m.load()
                 meta_models.append(m)
 
-        return CAT(cdb=cdb, vocab=vocab, meta_cats=meta_models)
+        return CAT(cdb=cdb, config=conf, vocab=vocab, meta_cats=meta_models)
 
     # helper generator functions to avoid multiple copies of data
     #
@@ -249,3 +301,118 @@ class MedCatProcessor(NlpProcessor):
             return version_line[0].split(' ')[1]
         except Exception:
             raise Exception("Cannot read the MedCAT library version")
+
+    def _retrain_supervised(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1,
+                            test_size=0.1, lr=1, groups=None, **kwargs):
+
+        data = json.load(open(data_path))
+        correct_ids = self._prepareDocumentsForPeformanceAnalysis(data)
+
+        cat = MedCatProcessor._create_cat(self)
+
+        f1_base = MedCatProcessor._computeF1forDocuments(self, data, self.cat, correct_ids)[2]
+        self.log.info('Base model F1: ' + str(f1_base))
+
+        cat.train = True
+        cat.spacy_cat.MIN_ACC = 0.30
+        cat.spacy_cat.MIN_ACC_TH = 0.30
+
+        self.log.info('Starting supervised training...')
+
+        try:
+            cat.train_supervised(data_path=data_path, lr=1, test_size=0.1, use_groups=None, nepochs=3)
+        except Exception:
+            self.log.info('Did not complete all supervised training')
+
+        p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)
+
+        self.log.info('Trained model F1: ' + str(f1))
+
+        if MedCatProcessor._checkmodelimproved(f1, f1_base):
+            self.log.info('Model will be saved...')
+
+            cat.cdb.save_dict('/cat/models/cdb_new.dat')
+
+        self.log.info('Completed Retraining Medcat...')
+        return p, r, f1, tp_dict, fp_dict, fn_dict
+
+    def _computeF1forDocuments(self, data, cat, correct_ids):
+
+        true_positives_dict, false_positives_dict, false_negatives_dict = {}, {}, {}
+        true_positive_no, false_positive_no, false_negative_no = 0, 0, 0
+
+        for project in data['projects']:
+
+            predictions = {}
+            documents = project['documents']
+            true_positives_dict[project['id']] = {}
+            false_positives_dict[project['id']] = {}
+            false_negatives_dict[project['id']] = {}
+
+            for document in documents:
+                true_positives_dict[project['id']][document['id']] = {}
+                false_positives_dict[project['id']][document['id']] = {}
+                false_negatives_dict[project['id']][document['id']] = {}
+
+                results = cat.get_entities(document['text'])
+                predictions[document['id']] = [[a['start'], a['end'], a['cui']] for a in results]
+
+                tps, fps, fns = self._getAccuraciesforDocument(correct_ids[project['id']][document['id']],
+                                                               predictions[document['id']])
+                true_positive_no += len(tps)
+                false_positive_no += len(fps)
+                false_negative_no += len(fns)
+
+                true_positives_dict[project['id']][document['id']] = tps
+                false_positives_dict[project['id']][document['id']] = fps
+                false_negatives_dict[project['id']][document['id']] = fns
+
+        if (true_positive_no + false_positive_no) == 0:
+            precision = 0
+        else:
+            precision = true_positive_no / (true_positive_no + false_positive_no)
+        if (true_positive_no + false_negative_no) == 0:
+            recall = 0
+        else:
+            recall = true_positive_no / (true_positive_no + false_negative_no)
+        if (precision + recall) == 0:
+            f1 = 0
+        else:
+            f1 = 2*((precision*recall) / (precision + recall))
+
+        return precision, recall, f1, true_positives_dict, false_positives_dict, false_negatives_dict
+
+    @staticmethod
+    def _prepareDocumentsForPeformanceAnalysis(data):
+        correct_ids = {}
+        for project in data['projects']:
+            correct_ids[project['id']] = {}
+
+            for document in project['documents']:
+                for entry in document['annotations']:
+                    if entry['correct']:
+                        if document['id'] not in correct_ids[project['id']]:
+                            correct_ids[project['id']][document['id']] = []
+                        correct_ids[project['id']][document['id']].append([entry['start'], entry['end'], entry['cui']])
+
+        return correct_ids
+
+    @staticmethod
+    def _getAccuraciesforDocument(prediction, correct_ids):
+
+        tup1 = list(map(tuple, correct_ids))
+        tup2 = list(map(tuple, prediction))
+
+        true_positives = list(map(list, set(tup1).intersection(tup2)))
+        false_positives = list(map(list, set(tup1).difference(tup2)))
+        false_negatives = list(map(list, set(tup2).difference(tup1)))
+
+        return true_positives, false_positives, false_negatives
+
+    @staticmethod
+    def _checkmodelimproved(f1_model_a, f1_model_b):
+
+        if f1_model_a > f1_model_b:
+            return True
+        else:
+            return False

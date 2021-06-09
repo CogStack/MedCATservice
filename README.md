@@ -113,6 +113,6 @@ The following environment variables are available for tailoring the MedCAT Servi
 
 
 ## MedCAT library
-MedCAT parameters are defined in selected `envs/env_medcat*` file. 
+MedCAT parameters are defined in selected `envs/env_medcat*`  file. 
 
 For details on available MedCAT parameters please refer to [the official GitHub repository](https://github.com/CogStack/MedCAT/).
