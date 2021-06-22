@@ -1,7 +1,7 @@
-medcat~=1.0.30
 Flask==1.1.4
-simplejson==3.17.0
 gunicorn==20.1.0
 injector==0.18.4
 flask-injector==0.12.3
 scikit-learn~=0.24.2
+dirtyjson~=1.0.7
+medcat~=1.0.33

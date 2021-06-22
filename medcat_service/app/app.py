@@ -7,6 +7,7 @@ import sys
 import flask_injector
 import injector
 from flask import Flask
+import json
 
 from medcat_service.api import api
 from medcat_service.nlp_processor import MedCatProcessor

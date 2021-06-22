@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import simplejson as json
+import json
 from flask import Blueprint, Response, request
 
 from medcat_service.nlp_service import NlpService

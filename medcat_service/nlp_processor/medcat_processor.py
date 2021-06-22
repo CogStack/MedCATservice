@@ -7,12 +7,14 @@ from datetime import datetime, timezone
 import pickle
 import dill
 import json
+import dirtyjson
 
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.config import Config
 from medcat.meta_cat import MetaCAT
 from medcat.utils.vocab import Vocab
+from numpy import save
 
 
 class NlpProcessor:
@@ -21,6 +23,7 @@ class NlpProcessor:
     """
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
+        self.log.setLevel(level=logging.INFO)
 
     def get_app_info(self):
         pass
@@ -87,7 +90,7 @@ class MedCatProcessor(NlpProcessor):
                           'errors': [error_msg],
                           'timestamp': NlpProcessor._get_timestamp()
                           }
-            return nlp_result, False
+            return json.dumps(nlp_result)
 
         text = content['text']
 
@@ -99,8 +102,8 @@ class MedCatProcessor(NlpProcessor):
             entities = []
 
         nlp_result = {
-                      'text': text,
-                      'annotations': str(entities),
+                      'text': str(text),
+                      'annotations': dirtyjson.loads(str(entities)),
                       'success': True,
                       'timestamp': NlpProcessor._get_timestamp()
                       }
@@ -108,8 +111,8 @@ class MedCatProcessor(NlpProcessor):
         # append the footer
         if 'footer' in content:
             nlp_result['footer'] = content['footer']
-
-        return nlp_result
+        
+        return json.dumps(nlp_result)
 
     def process_content_bulk(self, content):
         """
@@ -219,8 +222,7 @@ class MedCatProcessor(NlpProcessor):
         if os.getenv("APP_MODEL_META_PATH_LIST") is not None:
             self.log.debug('Loading META annotations ...')
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(':'):
-                m = MetaCAT(save_dir=model_path)
-                m.load()
+                m = MetaCAT.load(model_path)
                 meta_models.append(m)
 
         return CAT(cdb=cdb, config=conf, vocab=vocab, meta_cats=meta_models)

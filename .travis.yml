@@ -18,7 +18,7 @@ install:
   - python -m virtualenv venv-test
   - source venv-test/bin/activate
   - pip install -r medcat_service/requirements.txt
-  - pip install isort flake8 mypy types-simplejson types-Flask
+  - pip install isort flake8 mypy types-Flask
 
 before_script:
   - isort -rc .

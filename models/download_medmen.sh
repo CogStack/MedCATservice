@@ -22,7 +22,7 @@ fi
 
 if [[ ! -d "$MODEL_META" ]]; then
   echo "Downloading meta model: status"
-  curl https://zkcl.s3-eu-west-1.amazonaws.com/mc_status.zip > $MEDMEN_DIR/mc_status.zip && \
+  curl https://medcat.rosalind.kcl.ac.uk/media/mc_status.zip > $MEDMEN_DIR/mc_status.zip && \
     (cd $MEDMEN_DIR && unzip mc_status.zip) && \
     rm $MEDMEN_DIR/mc_status.zip
 else
