@@ -3,13 +3,18 @@
 
 import logging
 import os
-import json
 from datetime import datetime, timezone
+import pickle
+import dill
+import simplejson as json
+import dirtyjson
 
 from medcat.cat import CAT
 from medcat.cdb import CDB
+from medcat.config import Config
 from medcat.meta_cat import MetaCAT
-from medcat.utils.vocab import Vocab
+from medcat.vocab import Vocab
+from numpy import save
 
 
 class NlpProcessor:
@@ -18,6 +23,7 @@ class NlpProcessor:
     """
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
+        self.log.setLevel(level=logging.INFO)
 
     def get_app_info(self):
         pass
@@ -56,9 +62,7 @@ class MedCatProcessor(NlpProcessor):
 
         self.cat = self._create_cat()
 
-        self.cat.spacy_cat.train = False
-        if os.getenv("APP_TRAINING_MODE") == "True":
-            self.cat.spacy_cat.train = True
+        self.cat.train = os.getenv("APP_TRAINING_MODE", False)
 
         self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
 
@@ -82,11 +86,13 @@ class MedCatProcessor(NlpProcessor):
         """
         if 'text' not in content:
             error_msg = "'text' field missing in the payload content."
-            nlp_result = {'success': False,
+            nlp_result = {
+                          'success': False,
                           'errors': [error_msg],
-                          'timestamp': NlpProcessor._get_timestamp()
-                          }
-            return nlp_result, False
+                          'timestamp' : NlpProcessor._get_timestamp(),
+                         }
+                    
+            return json.dumps(nlp_result)
 
         text = content['text']
 
@@ -97,8 +103,9 @@ class MedCatProcessor(NlpProcessor):
         else:
             entities = []
 
-        nlp_result = {'text': text,
-                      'annotations': entities,
+        nlp_result = {
+                      'text': str(text),
+                      'annotations': dirtyjson.loads(str(entities)),
                       'success': True,
                       'timestamp': NlpProcessor._get_timestamp()
                       }
@@ -106,14 +113,14 @@ class MedCatProcessor(NlpProcessor):
         # append the footer
         if 'footer' in content:
             nlp_result['footer'] = content['footer']
-
-        return nlp_result
+        
+        return json.dumps(nlp_result)
 
     def process_content_bulk(self, content):
         """
         Processes an array of documents extracting the annotations.
         :param content: document to be processed, containing 'text' field.
-        :return: processing result containing documents with extracted annotations,stored as KVPs.
+        :return: processing result containing documents with extracted annotations, stored as KVPs.
         """
 
         # process at least 10 docs per thread and don't bother with starting
@@ -133,8 +140,12 @@ class MedCatProcessor(NlpProcessor):
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
         invalid_doc_ids = []
-        ann_res = self.cat.multi_processing(MedCatProcessor._generate_input_doc(content, invalid_doc_ids),
-                                            nproc=nproc, batch_size=batch_size)
+        ann_res = []
+        
+        try:
+            ann_res = self.cat.multiprocessing(MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=nproc)
+        except Exception as e:
+            self.log.error(repr(e))
 
         return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
 
@@ -173,11 +184,36 @@ class MedCatProcessor(NlpProcessor):
         # Vocabulary and Concept Database are mandatory
         self.log.debug('Loading VOCAB ...')
         vocab = Vocab()
-        vocab.load_dict(path=os.getenv("APP_MODEL_VOCAB_PATH"))
+
+        with open(os.getenv("APP_MODEL_VOCAB_PATH"), "rb") as f:
+            data = pickle.load(f)
+            if isinstance(data, dict):
+                vocab.__dict__ = data
+            else:
+                vocab = data
 
         self.log.debug('Loading CDB ...')
-        cdb = CDB()
-        cdb.load_dict(path=os.getenv("APP_MODEL_CDB_PATH"))
+
+        conf = Config()
+        conf.general['spacy_model'] = "en_core_sci_lg"
+
+        cdb = CDB(conf)
+        with open(os.getenv("APP_MODEL_CDB_PATH"), "rb") as f:
+            data = dill.load(f)
+            if isinstance(data, dict):
+                if "cdb" in data.keys() and isinstance(data["cdb"], dict):
+                    cdb.__dict__ = data["cdb"]
+                else:
+                    cdb = data
+
+                if "config" in data.keys() and isinstance(data["config"], dict):
+                    conf.__dict__ = data["config"]
+                else:
+                    conf = data["config"]
+            else:
+                cdb = data
+
+        cdb.config = conf
 
         # Apply CUI filter if provided
         if os.getenv("APP_MODEL_CUI_FILTER_PATH") is not None:
@@ -192,11 +228,10 @@ class MedCatProcessor(NlpProcessor):
         if os.getenv("APP_MODEL_META_PATH_LIST") is not None:
             self.log.debug('Loading META annotations ...')
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(':'):
-                m = MetaCAT(save_dir=model_path)
-                m.load()
+                m = MetaCAT.load(model_path)
                 meta_models.append(m)
 
-        return CAT(cdb=cdb, vocab=vocab, meta_cats=meta_models)
+        return CAT(cdb=cdb, config=conf, vocab=vocab, meta_cats=meta_models)
 
     # helper generator functions to avoid multiple copies of data
     #
@@ -234,8 +269,8 @@ class MedCatProcessor(NlpProcessor):
             in_ct = in_documents[res_idx]
 
             # parse the result
-            out_res = {'text': res[1]["text"],
-                       'annotations': res[1]["entities"],
+            out_res = {'text': str(res[1]["text"]),
+                       'annotations':  dirtyjson.loads(str(res[1]["entities"])),
                        'success': True,
                        'timestamp': NlpProcessor._get_timestamp()
                        }
@@ -243,7 +278,7 @@ class MedCatProcessor(NlpProcessor):
             if 'footer' in in_ct:
                 out_res['footer'] = in_ct['footer']
 
-            yield out_res
+            yield json.dumps(out_res)
 
         # generate output for invalid documents
         for i in invalid_doc_idx:
@@ -258,7 +293,7 @@ class MedCatProcessor(NlpProcessor):
             if 'footer' in in_ct:
                 out_res['footer'] = in_ct['footer']
 
-            yield out_res
+            yield json.dumps(out_res)
 
     @staticmethod
     def _get_medcat_version():
@@ -279,12 +314,6 @@ class MedCatProcessor(NlpProcessor):
 
         data = json.load(open(data_path))
         correct_ids = self._prepareDocumentsForPeformanceAnalysis(data)
-
-        # cdb = CDB()
-        # cdb.load_dict(cdb_path)
-        # vocab = Vocab()
-        # vocab.load_dict(path=vocab_path)
-        # cat = CAT(cdb, vocab=vocab)
 
         cat = MedCatProcessor._create_cat(self)
 

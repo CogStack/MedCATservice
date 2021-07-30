@@ -1,7 +1,7 @@
-#dist: xenial
+#dist: focal
 
 language: python
-version:
+python:
   - "3.7"
 
 before_cache:
@@ -13,16 +13,17 @@ cache:
     - $HOME/venv-test
 
 install:
+  - pip install --upgrade pip
   - pip install virtualenv
   - python -m virtualenv venv-test
   - source venv-test/bin/activate
   - pip install -r medcat_service/requirements.txt
-  - pip install isort flake8 mypy
+  - pip install isort flake8 mypy types-Flask
 
 before_script:
   - isort -rc .
   - flake8 .
-  - mypy .
+#  - mypy . --ignore-missing-imports
 
 script:
   - bash run_tests.sh

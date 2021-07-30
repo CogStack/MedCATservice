@@ -6,13 +6,14 @@ import sys
 
 import flask_injector
 import injector
-from flask import Flask
+import simplejson as json
 
+from flask import Flask
 from medcat_service.api import api
 from medcat_service.nlp_processor import MedCatProcessor
 from medcat_service.nlp_service import MedCatService, NlpService
 
-
+    
 def setup_logging():
     """
     Configure and setup a default logging handler to print messages to stdout
