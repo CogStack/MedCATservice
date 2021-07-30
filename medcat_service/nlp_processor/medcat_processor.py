@@ -6,14 +6,14 @@ import os
 from datetime import datetime, timezone
 import pickle
 import dill
-import json
+import simplejson as json
 import dirtyjson
 
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.config import Config
 from medcat.meta_cat import MetaCAT
-from medcat.utils.vocab import Vocab
+from medcat.vocab import Vocab
 from numpy import save
 
 
@@ -86,10 +86,12 @@ class MedCatProcessor(NlpProcessor):
         """
         if 'text' not in content:
             error_msg = "'text' field missing in the payload content."
-            nlp_result = {'success': False,
+            nlp_result = {
+                          'success': False,
                           'errors': [error_msg],
-                          'timestamp': NlpProcessor._get_timestamp()
-                          }
+                          'timestamp' : NlpProcessor._get_timestamp(),
+                         }
+                    
             return json.dumps(nlp_result)
 
         text = content['text']
@@ -118,7 +120,7 @@ class MedCatProcessor(NlpProcessor):
         """
         Processes an array of documents extracting the annotations.
         :param content: document to be processed, containing 'text' field.
-        :return: processing result containing documents with extracted annotations,stored as KVPs.
+        :return: processing result containing documents with extracted annotations, stored as KVPs.
         """
 
         # process at least 10 docs per thread and don't bother with starting
@@ -138,8 +140,12 @@ class MedCatProcessor(NlpProcessor):
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
         invalid_doc_ids = []
-        ann_res = self.cat.multi_processing(MedCatProcessor._generate_input_doc(content, invalid_doc_ids),
-                                            nproc=nproc, batch_size=batch_size)
+        ann_res = []
+        
+        try:
+            ann_res = self.cat.multiprocessing(MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=nproc)
+        except Exception as e:
+            self.log.error(repr(e))
 
         return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
 
@@ -263,8 +269,8 @@ class MedCatProcessor(NlpProcessor):
             in_ct = in_documents[res_idx]
 
             # parse the result
-            out_res = {'text': res[1]["text"],
-                       'annotations': res[1]["entities"],
+            out_res = {'text': str(res[1]["text"]),
+                       'annotations':  dirtyjson.loads(str(res[1]["entities"])),
                        'success': True,
                        'timestamp': NlpProcessor._get_timestamp()
                        }
@@ -272,7 +278,7 @@ class MedCatProcessor(NlpProcessor):
             if 'footer' in in_ct:
                 out_res['footer'] = in_ct['footer']
 
-            yield out_res
+            yield json.dumps(out_res)
 
         # generate output for invalid documents
         for i in invalid_doc_idx:
@@ -287,7 +293,7 @@ class MedCatProcessor(NlpProcessor):
             if 'footer' in in_ct:
                 out_res['footer'] = in_ct['footer']
 
-            yield out_res
+            yield json.dumps(out_res)
 
     @staticmethod
     def _get_medcat_version():

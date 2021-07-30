@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import json
+import simplejson as json
+from typing import Iterable
 from flask import Blueprint, Response, request
 
 from medcat_service.nlp_service import NlpService
@@ -31,7 +32,7 @@ def process(nlp_service: NlpService) -> Response:
     """
     Returns the annotations extracted from a provided single document
     :param nlp_service: NLP Service provided by dependency injection
-    :return: Flask Response
+    :return: Flask Response5770
     """
     payload = request.get_json()
     if payload is None or 'content' not in payload or payload['content'] is None:
@@ -39,7 +40,8 @@ def process(nlp_service: NlpService) -> Response:
 
     try:
         result = nlp_service.nlp.process_content(payload['content'])
-        response = {'result': result}
+        app_info = nlp_service.nlp.get_app_info()
+        response = {'result': result, 'medcat_info' : app_info}
         return Response(response=json.dumps(response), status=200)
 
     except Exception as e:
@@ -54,12 +56,13 @@ def process_bulk(nlp_service: NlpService) -> Response:
     :return: Flask Response
     """
     payload = request.get_json()
-    if payload is None or 'content' not in payload or payload['content'] is None:
+    if payload is None or 'content' not in payload.keys() or payload['content'] is None:
         return Response(response="Input Payload should be JSON", status=400)
 
     try:
         result = nlp_service.nlp.process_content_bulk(payload['content'])
-        response = {'result': result}
+        app_info = nlp_service.nlp.get_app_info()
+        response = {'result': result, 'medcat_info' : app_info}
         return Response(response=json.dumps(response, iterable_as_array=True), status=200)
 
     except Exception as e:
@@ -75,7 +78,8 @@ def retrain_medcat(nlp_service: NlpService) -> Response:
 
     try:
         result = nlp_service.nlp.retrain_medcat(payload['content'], payload['replace_cdb'])
-        response = {'result': result, 'annotations': payload['content']}
+        app_info = nlp_service.nlp.get_app_info()
+        response = {'result': result, 'annotations': payload['content'], 'medcat_info' : app_info}
         return Response(response=json.dumps(response), status=200)
 
     except Exception as e:

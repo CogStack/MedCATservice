@@ -83,6 +83,32 @@ and the received result:
 }
 ```
 
+process_bulk example :
+
+```
+curl -XPOST http://localhost:5000/api/process_bulk \
+ -H 'Content-Type: application/json' \
+ -d '{"content": [{"text":"The patient was diagnosed with leukemia."}, {"text": "The patient was diagnosed with cancer."}] }'
+```
+
+example bulk result : 
+
+```
+{
+   "result":[
+      "{\"text\": \"The patient was diagnosed with leukemia.\", \"annotations\": {\"0\": {\"pretty_name\": \"Patients\", \"cui\": \"C0030705\", \"tuis\": [\"T101\"], \"types\": [\"Patient or Disabled Group\"], \"source_value\": \"patient\", \"detected_name\": \"patient\", \"acc\": 0.5118738907678553, \"context_similarity\": 0.5118738907678553, \"start\": 4, \"end\": 11, \"id\": 0, \"meta_anns\": {\"Status\": {\"value\": \"Affirmed\", \"confidence\": 0.9978787, \"name\": \"Status\"}}}, \"1\": {\"pretty_name\": \"Diagnosis\", \"cui\": \"C0011900\", \"tuis\": [\"T060\"], \"types\": [\"Diagnostic Procedure\"], \"source_value\": \"diagnosed\", \"detected_name\": \"diagnosed\", \"acc\": 0.5041741293656868, \"context_similarity\": 0.5041741293656868, \"start\": 16, \"end\": 25, \"id\": 1, \"meta_anns\": {\"Status\": {\"value\": \"Affirmed\", \"confidence\": 0.99995565, \"name\": \"Status\"}}}}, \"success\": true, \"timestamp\": \"2021-07-30T10:27:57.429+00:00\"}",
+      "{\"text\": \"The patient was diagnosed with cancer.\", \"annotations\": {\"0\": {\"pretty_name\": \"Patients\", \"cui\": \"C0030705\", \"tuis\": [\"T101\"], \"types\": [\"Patient or Disabled Group\"], \"source_value\": \"patient\", \"detected_name\": \"patient\", \"acc\": 0.6450316554994725, \"context_similarity\": 0.6450316554994725, \"start\": 4, \"end\": 11, \"id\": 0, \"meta_anns\": {\"Status\": {\"value\": \"Affirmed\", \"confidence\": 0.9982187, \"name\": \"Status\"}}}, \"2\": {\"pretty_name\": \"cancer diagnosis\", \"cui\": \"C0920688\", \"tuis\": [\"T060\"], \"types\": [\"Diagnostic Procedure\"], \"source_value\": \"diagnosed with cancer\", \"detected_name\": \"diagnosed~with~cancer\", \"acc\": 1.0, \"context_similarity\": 1.0, \"start\": 16, \"end\": 37, \"id\": 2, \"meta_anns\": {\"Status\": {\"value\": \"Affirmed\", \"confidence\": 0.9999652, \"name\": \"Status\"}}}}, \"success\": true, \"timestamp\": \"2021-07-30T10:27:57.430+00:00\"}"
+   ],
+   "medcat_info":{
+      "name":"MedCAT",
+      "language":"en",
+      "version":"1.0.40",
+      "model":"MedMen"
+   }
+}
+```
+
+
 Please note that the returned NLP annotations will depend on the underlying model used. For evaluation, we can only provide a very basic model trained on [MedMentions](https://github.com/chanzuckerberg/MedMentions). Models utilising [SNOMED CT](https://www.england.nhs.uk/digitaltechnology/digital-primary-care/snomed-ct/) or [UMLS](https://www.nlm.nih.gov/research/umls/index.html) may require applying for licenses from the copyright holders.
 
 
