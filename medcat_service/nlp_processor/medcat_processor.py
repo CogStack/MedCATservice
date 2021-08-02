@@ -73,10 +73,10 @@ class MedCatProcessor(NlpProcessor):
         Returns general information about the application
         :return: application information stored as KVPs
         """
-        return {'name': self.app_name,
-                'language': self.app_lang,
-                'version': self.app_version,
-                'model': self.app_model}
+        return {'service_app_name': self.app_name,
+                'medcat_service_language': self.app_lang,
+                'medcat_service_version': self.app_version,
+                'medcat_service_model': self.app_model}
 
     def process_content(self, content):
         """
