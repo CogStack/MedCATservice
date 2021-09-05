@@ -198,6 +198,7 @@ class MedCatProcessor(NlpProcessor):
         conf.general['spacy_model'] = "en_core_sci_lg"
 
         cdb = CDB(conf)
+        
         with open(os.getenv("APP_MODEL_CDB_PATH"), "rb") as f:
             data = dill.load(f)
             if isinstance(data, dict):
@@ -230,8 +231,9 @@ class MedCatProcessor(NlpProcessor):
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(':'):
                 m = MetaCAT.load(model_path)
                 meta_models.append(m)
-
-        return CAT(cdb=cdb, config=conf, vocab=vocab, meta_cats=meta_models)
+        
+        cat = CAT(cdb=cdb, config=conf, vocab=vocab, meta_cats=meta_models)
+        return cat
 
     # helper generator functions to avoid multiple copies of data
     #
@@ -321,8 +323,8 @@ class MedCatProcessor(NlpProcessor):
         self.log.info('Base model F1: ' + str(f1_base))
 
         cat.train = True
-        cat.spacy_cat.MIN_ACC = 0.30
-        cat.spacy_cat.MIN_ACC_TH = 0.30
+        cat.spacy_cat.MIN_ACC = os.getenv("MIN_ACC", 0.20)
+        cat.spacy_cat.MIN_ACC_TH = os.getenv("MIN_ACC_TH", 0.20)
 
         self.log.info('Starting supervised training...')
 
