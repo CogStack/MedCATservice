@@ -3,9 +3,9 @@ name: Docker
 on:
 
   push:
-    branches: [ master ]
+    branches: [ devel ]
   pull_request:
-    branches: [ master ]
+    branches: [ devel ]
     
   release:
     types: [published]
@@ -34,7 +34,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v3
         with:
-          images: cogstacksystems/medcat-service:latest
+          images: cogstacksystems/medcat-service:dev-latest
           
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
@@ -50,7 +50,7 @@ jobs:
           file : "Dockerfile"
           allow: network.host
           github-token: ${{ github.token }}
-          tags: cogstacksystems/medcat-service:latest
+          tags: cogstacksystems/medcat-service:dev-latest
           push : true
           labels: ${{ steps.meta.outputs.labels }}
           
