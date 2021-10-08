@@ -249,7 +249,7 @@ class MedCatProcessor(NlpProcessor):
         """
         for i in range(0, len(documents)):
             # assume the document to be processed only when it is not blank
-            if 'text' in documents[i] and documents[i]['text'] is not None and len(documents[i]['text'].strip()) > 0:
+            if documents[i] is not None and 'text' in documents[i] and documents[i]['text'] is not None and len(documents[i]['text'].strip()) > 0:
                 yield i, documents[i]['text']
             else:
                 invalid_doc_idx.append(i)
