@@ -42,7 +42,7 @@ def process(nlp_service: NlpService) -> Response:
         result = nlp_service.nlp.process_content(payload['content'])
         app_info = nlp_service.nlp.get_app_info()
         response = {'result': result, 'medcat_info' : app_info}
-        return Response(response=json.dumps(response), status=200)
+        return Response(response=json.dumps(response), status=200, mimetype="application/json")
 
     except Exception as e:
         return Response(response="Internal processing error %s" % e, status=500)
@@ -63,7 +63,7 @@ def process_bulk(nlp_service: NlpService) -> Response:
         result = nlp_service.nlp.process_content_bulk(payload['content'])
         app_info = nlp_service.nlp.get_app_info()
         response = {'result': result, 'medcat_info' : app_info}
-        return Response(response=json.dumps(response, iterable_as_array=True), status=200)
+        return Response(response=json.dumps(response, iterable_as_array=True), status=200, mimetype="application/json")
 
     except Exception as e:
         return Response(response="Internal processing error %s" % e, status=500)
@@ -80,7 +80,7 @@ def retrain_medcat(nlp_service: NlpService) -> Response:
         result = nlp_service.nlp.retrain_medcat(payload['content'], payload['replace_cdb'])
         app_info = nlp_service.nlp.get_app_info()
         response = {'result': result, 'annotations': payload['content'], 'medcat_info' : app_info}
-        return Response(response=json.dumps(response), status=200)
+        return Response(response=json.dumps(response), status=200, mimetype="application/json")
 
     except Exception as e:
         return Response(response="Internal processing error %s" % e, status=500)

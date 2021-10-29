@@ -55,8 +55,8 @@ class MedCatProcessor(NlpProcessor):
 
         # TODO: use a config file instead of env variables
         #
-        self.app_name = 'MedCAT'
-        self.app_lang = 'en'
+        self.app_name = os.getenv("APP_NAME", "MedCAT")
+        self.app_lang = os.getenv("APP_MODEL_LANGUAGE", "en")
         self.app_version = MedCatProcessor._get_medcat_version()
         self.app_model = os.getenv("APP_MODEL_NAME", 'unknown')
 
@@ -74,9 +74,9 @@ class MedCatProcessor(NlpProcessor):
         :return: application information stored as KVPs
         """
         return {'service_app_name': self.app_name,
-                'medcat_service_language': self.app_lang,
-                'medcat_service_version': self.app_version,
-                'medcat_service_model': self.app_model}
+                'service_language': self.app_lang,
+                'service_version': self.app_version,
+                'service_model': self.app_model}
 
     def process_content(self, content):
         """
@@ -92,7 +92,7 @@ class MedCatProcessor(NlpProcessor):
                           'timestamp' : NlpProcessor._get_timestamp(),
                          }
                     
-            return json.dumps(nlp_result)
+            return nlp_result
 
         text = content['text']
 
@@ -114,7 +114,7 @@ class MedCatProcessor(NlpProcessor):
         if 'footer' in content:
             nlp_result['footer'] = content['footer']
         
-        return json.dumps(nlp_result)
+        return nlp_result
 
     def process_content_bulk(self, content):
         """
@@ -195,7 +195,7 @@ class MedCatProcessor(NlpProcessor):
         self.log.debug('Loading CDB ...')
 
         conf = Config()
-        conf.general['spacy_model'] = "en_core_sci_lg"
+        conf.general["spacy_model"] = os.getenv("SPACY_MODEL", "en_core_sci_md") 
 
         cdb = CDB(conf)
         
@@ -280,7 +280,7 @@ class MedCatProcessor(NlpProcessor):
             if 'footer' in in_ct:
                 out_res['footer'] = in_ct['footer']
 
-            yield json.dumps(out_res)
+            yield out_res
 
         # generate output for invalid documents
         for i in invalid_doc_idx:
@@ -295,7 +295,7 @@ class MedCatProcessor(NlpProcessor):
             if 'footer' in in_ct:
                 out_res['footer'] = in_ct['footer']
 
-            yield json.dumps(out_res)
+            yield out_res   
 
     @staticmethod
     def _get_medcat_version():

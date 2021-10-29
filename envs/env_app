@@ -1,6 +1,8 @@
 DEBUG=False
 
 # can include only one model for NER
+APP_NAME=MedCAT
+APP_MODEL_LANGUAGE=en
 APP_MODEL_NAME=MedMen
 APP_MODEL_CDB_PATH=/cat/models/cdb.dat
 APP_MODEL_VOCAB_PATH=/cat/models/vocab.dat
