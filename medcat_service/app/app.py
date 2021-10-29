@@ -6,7 +6,6 @@ import sys
 
 import flask_injector
 import injector
-import simplejson as json
 
 from flask import Flask
 from medcat_service.api import api
