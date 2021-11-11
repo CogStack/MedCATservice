@@ -1,11 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
+import traceback
+import os
 import simplejson as json
 from typing import Iterable
 from flask import Blueprint, Response, request
 
 from medcat_service.nlp_service import NlpService
+
+log = logging.getLogger("API")
+log.setLevel(level=os.getenv("APP_LOG_LEVEL", logging.INFO))
 
 # define API using Flask Blueprint
 #
@@ -32,7 +38,7 @@ def process(nlp_service: NlpService) -> Response:
     """
     Returns the annotations extracted from a provided single document
     :param nlp_service: NLP Service provided by dependency injection
-    :return: Flask Response5770
+    :return: Flask response
     """
     payload = request.get_json()
     if payload is None or 'content' not in payload or payload['content'] is None:
@@ -45,6 +51,7 @@ def process(nlp_service: NlpService) -> Response:
         return Response(response=json.dumps(response), status=200, mimetype="application/json")
 
     except Exception as e:
+        log.error(traceback.format_exc())
         return Response(response="Internal processing error %s" % e, status=500)
 
 
@@ -62,10 +69,12 @@ def process_bulk(nlp_service: NlpService) -> Response:
     try:
         result = nlp_service.nlp.process_content_bulk(payload['content'])
         app_info = nlp_service.nlp.get_app_info()
+    
         response = {'result': result, 'medcat_info' : app_info}
         return Response(response=json.dumps(response, iterable_as_array=True), status=200, mimetype="application/json")
 
     except Exception as e:
+        log.error(traceback.format_exc())
         return Response(response="Internal processing error %s" % e, status=500)
 
 
@@ -83,4 +92,5 @@ def retrain_medcat(nlp_service: NlpService) -> Response:
         return Response(response=json.dumps(response), status=200, mimetype="application/json")
 
     except Exception as e:
+        log.error(traceback.format_exc())
         return Response(response="Internal processing error %s" % e, status=500)

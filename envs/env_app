@@ -1,5 +1,7 @@
-DEBUG=False
+DEBUG=True
 
+# Additional settings
+APP_LOG_LEVEL=DEBUG
 # can include only one model for NER
 APP_NAME=MedCAT
 APP_MODEL_LANGUAGE=en
@@ -11,7 +13,7 @@ APP_MODEL_VOCAB_PATH=/cat/models/vocab.dat
 APP_MODEL_META_PATH_LIST=/cat/models/mc_status
 
 # optionally, an filter the reported concepts by CUIs
-#APP_MODEL_CUI_FILTER_PATH=/cat/models/cui_filter.txt
+# APP_MODEL_CUI_FILTER_PATH=/cat/models/cui_filter.txt
 
 # NLP processing
 APP_BULK_NPROC=8

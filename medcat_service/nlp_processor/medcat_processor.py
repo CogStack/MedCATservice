@@ -23,7 +23,8 @@ class NlpProcessor:
     """
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
-        self.log.setLevel(level=logging.INFO)
+        self.log.setLevel(level=os.getenv("APP_LOG_LEVEL", logging.INFO))
+
 
     def get_app_info(self):
         pass
@@ -193,28 +194,12 @@ class MedCatProcessor(NlpProcessor):
                 vocab = data
 
         self.log.debug('Loading CDB ...')
-
-        conf = Config()
-        conf.general["spacy_model"] = os.getenv("SPACY_MODEL", "en_core_sci_md") 
-
-        cdb = CDB(conf)
         
-        with open(os.getenv("APP_MODEL_CDB_PATH"), "rb") as f:
-            data = dill.load(f)
-            if isinstance(data, dict):
-                if "cdb" in data.keys() and isinstance(data["cdb"], dict):
-                    cdb.__dict__ = data["cdb"]
-                else:
-                    cdb = data
+        cdb = CDB.load(os.getenv("APP_MODEL_CDB_PATH"))
+        cdb.config.general["spacy_model"] = os.getenv("SPACY_MODEL", "en_core_sci_md") 
 
-                if "config" in data.keys() and isinstance(data["config"], dict):
-                    conf.__dict__ = data["config"]
-                else:
-                    conf = data["config"]
-            else:
-                cdb = data
-
-        cdb.config = conf
+        # this is redundant as the config is already in the CDB
+        conf = cdb.config
 
         # Apply CUI filter if provided
         if os.getenv("APP_MODEL_CUI_FILTER_PATH") is not None:
@@ -240,12 +225,12 @@ class MedCatProcessor(NlpProcessor):
     @staticmethod
     def _generate_input_doc(documents, invalid_doc_idx):
         """
-        Generator function returning documents to be processed as a list of tuples:
-          (idx, text), (idx, text), ...
-        Skips empty documents and reports their ids to the invalid_doc_idx array
-        :param documents: array of input documents that contain 'text' field
-        :param invalid_doc_idx:  array that will contain invalid document idx
-        :return: consecutive tuples of (idx, document)
+            Generator function returning documents to be processed as a list of tuples:
+            (idx, text), (idx, text), ...
+            Skips empty documents and reports their ids to the invalid_doc_idx array
+            :param documents: array of input documents that contain 'text' field
+            :param invalid_doc_idx:  array that will contain invalid document idx
+            :return: consecutive tuples of (idx, document)
         """
         for i in range(0, len(documents)):
             # assume the document to be processed only when it is not blank
@@ -264,18 +249,17 @@ class MedCatProcessor(NlpProcessor):
         :param invalid_doc_idx: array of invalid document idx
         :return:
         """
+        
         # generate output for valid annotations
         for i in range(len(annotations)):
-            res = annotations[i]
-            res_idx = res[0]
-            in_ct = in_documents[res_idx]
+            in_ct = in_documents[i]
 
             # parse the result
-            out_res = {'text': str(res[1]["text"]),
-                       'annotations':  dirtyjson.loads(str(res[1]["entities"])),
-                       'success': True,
-                       'timestamp': NlpProcessor._get_timestamp()
-                       }
+            out_res = {'text': str(in_documents[i]["text"]),
+                    'annotations': dirtyjson.loads(str(annotations[i]["entities"])),
+                    'success': True,
+                    'timestamp': NlpProcessor._get_timestamp()
+                    }
             # append the footer
             if 'footer' in in_ct:
                 out_res['footer'] = in_ct['footer']
@@ -287,10 +271,10 @@ class MedCatProcessor(NlpProcessor):
             in_ct = in_documents[i]
 
             out_res = {'text': in_ct["text"],
-                       'annotations': [],
-                       'success': True,
-                       'timestamp': NlpProcessor._get_timestamp()
-                       }
+                    'annotations': [],
+                    'success': True,
+                    'timestamp': NlpProcessor._get_timestamp()
+                    }
             # append the footer
             if 'footer' in in_ct:
                 out_res['footer'] = in_ct['footer']
