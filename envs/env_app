@@ -1,7 +1,7 @@
 DEBUG=True
 
 # Additional settings
-APP_LOG_LEVEL=DEBUG
+APP_LOG_LEVEL=INFO
 # can include only one model for NER
 APP_NAME=MedCAT
 APP_MODEL_LANGUAGE=en
