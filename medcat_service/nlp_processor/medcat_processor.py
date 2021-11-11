@@ -184,18 +184,12 @@ class MedCatProcessor(NlpProcessor):
 
         # Vocabulary and Concept Database are mandatory
         self.log.debug('Loading VOCAB ...')
-        vocab = Vocab()
-
-        with open(os.getenv("APP_MODEL_VOCAB_PATH"), "rb") as f:
-            data = pickle.load(f)
-            if isinstance(data, dict):
-                vocab.__dict__ = data
-            else:
-                vocab = data
+        vocab = Vocab.load(os.getenv("APP_MODEL_VOCAB_PATH"))
 
         self.log.debug('Loading CDB ...')
         
         cdb = CDB.load(os.getenv("APP_MODEL_CDB_PATH"))
+        
         cdb.config.general["spacy_model"] = os.getenv("SPACY_MODEL", "en_core_sci_md") 
 
         # this is redundant as the config is already in the CDB
