@@ -48,8 +48,8 @@ class TestMedcatService(unittest.TestCase):
 
         if "APP_MODEL_META_PATH_LIST" not in os.environ:
             cls.log.warning("""OS ENV: APP_MODEL_META_PATH_LIST: not set -- setting to
-                                default: './models/medmen/mc_status'""")
-            os.environ["APP_MODEL_META_PATH_LIST"] = "./models/medmen/mc_status"
+                                default: './models/medmen/Status'""")
+            os.environ["APP_MODEL_META_PATH_LIST"] = "./models/medmen/Status"
 
         if "APP_BULK_NPROC" not in os.environ:
             cls.log.warning("OS ENV: APP_BULK_NPROC: not set -- setting to default: 8")

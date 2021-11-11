@@ -10,7 +10,7 @@ APP_MODEL_CDB_PATH=/cat/models/cdb.dat
 APP_MODEL_VOCAB_PATH=/cat/models/vocab.dat
 
 # optionally, can include multiple models for meta tasks, separated using ':'
-APP_MODEL_META_PATH_LIST=/cat/models/mc_status
+APP_MODEL_META_PATH_LIST=/cat/models/Status
 
 # optionally, an filter the reported concepts by CUIs
 # APP_MODEL_CUI_FILTER_PATH=/cat/models/cui_filter.txt
