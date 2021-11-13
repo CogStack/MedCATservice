@@ -5,7 +5,7 @@ set -e
 MEDMEN_DIR=./medmen
 MODEL_CDB=$MEDMEN_DIR/cdb.dat
 MODEL_VCB=$MEDMEN_DIR/vocab.dat
-MODEL_META=$MEDMEN_DIR/mc_status
+MODEL_META=$MEDMEN_DIR/Status
 
 if [[ ! -f "$MODEL_CDB"  || ! -f "$MODEL_VCB" ]]; then
   echo "Downloading model: MedMentions"

@@ -11,4 +11,5 @@ services:
     - ../models/medmen/cdb.dat:/cat/models/cdb.dat:ro
     - ../models/medmen/Status:/cat/models/Status:ro
     ports:
-      - "5555:5000"
+      - "5000:5000"
+

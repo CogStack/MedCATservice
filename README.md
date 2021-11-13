@@ -52,7 +52,7 @@ Alternatively, an example script `./docker/run_example_medmen.sh` was provided t
 
 Assuming that the application is running on the `localhost` with the API exposed on port `5000`, one can run:
 ```
-curl -XPOST http://localhost:5555/api/process \
+curl -XPOST http://localhost:5000/api/process \
   -H 'Content-Type: application/json' \
   -d '{"content":{"text":"The patient was diagnosed with leukemia."}}'
 ```
@@ -75,7 +75,7 @@ and the received result:
 process_bulk example :
 
 ```
-curl -XPOST http://localhost:5555/api/process_bulk \
+curl -XPOST http://localhost:5000/api/process_bulk \
  -H 'Content-Type: application/json' \
  -d '{"content": [{"text":"The patient was diagnosed with leukemia."}, {"text": "The patient was diagnosed with cancer."}] }'
 ```
