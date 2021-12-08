@@ -76,12 +76,12 @@ class TestMedcatService(unittest.TestCase):
     #
     def _testProcessSingleDoc(self, doc):
         """
-        Tests processing a single document as:
-          - create a JSON payload given the input doc
-          - post the payload to the single processing endpoing
-          - parse the response and check the returned result
-        :param doc: input document to be processed (string)
-        :return:
+            Tests processing a single document as:
+            - create a JSON payload given the input doc
+            - post the payload to the single processing endpoing
+            - parse the response and check the returned result
+            :param doc: input document to be processed (string)
+            :return:
         """
         payload = common.create_payload_content_from_doc_single(doc)
         response = self.client.post(self.ENDPOINT_PROCESS_SINGLE, json=payload)
@@ -92,13 +92,13 @@ class TestMedcatService(unittest.TestCase):
 
     def _testProcessBulkMultipleDocs(self, docs, multiply_sizes):
         """
-        Tests processing a bulk of document in sets of multiple batches, where, per each:
-          - create a JSON payload given the input doc
-          - post the payload to the single processing endpoing
-          - parse the response and check the returned result
-        :param docs: input document to be processed (string)
-        :param: multiply_sizes: array of different bulk sizes to be tested
-        :return:
+            Tests processing a bulk of document in sets of multiple batches, where, per each:
+            - create a JSON payload given the input doc
+            - post the payload to the single processing endpoing
+            - parse the response and check the returned result
+            :param docs: input document to be processed (string)
+            :param: multiply_sizes: array of different bulk sizes to be tested
+            :return:
         """
         for n in multiply_sizes:
             req_docs = docs * n

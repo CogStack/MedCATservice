@@ -23,7 +23,7 @@ install:
 before_script:
   - isort -rc .
   - flake8 .
-#  - mypy . --ignore-missing-imports
+  - mypy . --ignore-missing-imports
 
 script:
   - bash run_tests.sh

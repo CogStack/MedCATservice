@@ -2,11 +2,11 @@
 set -e
 
 # download the sci-scpacy language model
-python -m pip install spacy==3.0.7 
-python -m pip install -r medcat_service/requirements.txt
-python -m spacy download en_core_web_md
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz
-pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz
+python3 -m pip install -r medcat_service/requirements.txt
+python3 -m spacy download en_core_web_md
+python3 -m spacy download en_core_web_lg
+pip3 install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz
+pip3 install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz
 
 # download the test MedCAT model
 ( cd ./models && bash download_medmen.sh )
@@ -18,7 +18,7 @@ export APP_VOCAB_MODEL="$PWD/models/medmen/vocab.dat"
 echo "Starting the tests ..."
 
 # run the python tests
-python -m medcat_service.test.test_service
+python3 -m medcat_service.test.test_service
 
 if [ "$?" -ne "0" ]; then
     echo "Error: one or more tests failed"

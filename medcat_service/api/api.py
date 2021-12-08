@@ -5,7 +5,6 @@ import logging
 import traceback
 import os
 import simplejson as json
-from typing import Iterable
 from flask import Blueprint, Response, request
 
 from medcat_service.nlp_service import NlpService
@@ -47,7 +46,7 @@ def process(nlp_service: NlpService) -> Response:
     try:
         result = nlp_service.nlp.process_content(payload['content'])
         app_info = nlp_service.nlp.get_app_info()
-        response = {'result': result, 'medcat_info' : app_info}
+        response = {'result': result, 'medcat_info': app_info}
         return Response(response=json.dumps(response), status=200, mimetype="application/json")
 
     except Exception as e:
@@ -69,8 +68,8 @@ def process_bulk(nlp_service: NlpService) -> Response:
     try:
         result = nlp_service.nlp.process_content_bulk(payload['content'])
         app_info = nlp_service.nlp.get_app_info()
-    
-        response = {'result': result, 'medcat_info' : app_info}
+
+        response = {'result': result, 'medcat_info': app_info}
         return Response(response=json.dumps(response, iterable_as_array=True), status=200, mimetype="application/json")
 
     except Exception as e:
@@ -88,7 +87,7 @@ def retrain_medcat(nlp_service: NlpService) -> Response:
     try:
         result = nlp_service.nlp.retrain_medcat(payload['content'], payload['replace_cdb'])
         app_info = nlp_service.nlp.get_app_info()
-        response = {'result': result, 'annotations': payload['content'], 'medcat_info' : app_info}
+        response = {'result': result, 'annotations': payload['content'], 'medcat_info': app_info}
         return Response(response=json.dumps(response), status=200, mimetype="application/json")
 
     except Exception as e:

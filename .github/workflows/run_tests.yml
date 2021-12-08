@@ -45,7 +45,7 @@ jobs:
       - name: Before script
         run: |
           isort -rc .
-#          flake8 .
+          flake8 .
 #          mypy . --ignore-missing-imports
 
       - name: Run tests
