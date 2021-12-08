@@ -4,17 +4,11 @@
 import logging
 import os
 from datetime import datetime, timezone
-import pickle
-import dill
 import simplejson as json
-import dirtyjson
-
 from medcat.cat import CAT
 from medcat.cdb import CDB
-from medcat.config import Config
 from medcat.meta_cat import MetaCAT
 from medcat.vocab import Vocab
-from numpy import save
 
 
 class NlpProcessor:
@@ -24,7 +18,6 @@ class NlpProcessor:
     def __init__(self):
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(level=os.getenv("APP_LOG_LEVEL", logging.INFO))
-
 
     def get_app_info(self):
         pass
@@ -53,7 +46,7 @@ class MedCatProcessor(NlpProcessor):
         super().__init__()
 
         self.log.info("Initializing MedCAT processor ...")
-      
+
         self.app_name = os.getenv("APP_NAME", "MedCAT")
         self.app_lang = os.getenv("APP_MODEL_LANGUAGE", "en")
         self.app_version = MedCatProcessor._get_medcat_version()
@@ -78,12 +71,13 @@ class MedCatProcessor(NlpProcessor):
                 "service_model": self.app_model}
 
     def process_entities(self, entities):
-        if "entities" in entities.keys():
-            entities = entities["entities"]
+        if type(entities) is dict:
+            if "entities" in entities.keys():
+                entities = entities["entities"]
 
-        if self.entity_output_mode == "list":
-            return list(entities.values())
-        
+            if self.entity_output_mode == "list":
+                return list(entities.values())
+
         return entities
 
     def process_content(self, content):
@@ -97,9 +91,9 @@ class MedCatProcessor(NlpProcessor):
             nlp_result = {
                           "success": False,
                           "errors": [error_msg],
-                          "timestamp" : NlpProcessor._get_timestamp(),
+                          "timestamp": NlpProcessor._get_timestamp(),
                          }
-                    
+
             return nlp_result
 
         text = content["text"]
@@ -110,9 +104,9 @@ class MedCatProcessor(NlpProcessor):
             entities = self.cat.get_entities(text)
         else:
             entities = []
-        
+
         entities = self.process_entities(entities)
-        
+
         nlp_result = {
                       "text": str(text),
                       "annotations": entities,
@@ -123,7 +117,7 @@ class MedCatProcessor(NlpProcessor):
         # append the footer
         if "footer" in content:
             nlp_result["footer"] = content["footer"]
-        
+
         return nlp_result
 
     def process_content_bulk(self, content):
@@ -151,9 +145,10 @@ class MedCatProcessor(NlpProcessor):
         # to avoid too many mem-copies
         invalid_doc_ids = []
         ann_res = []
-        
+
         try:
-            ann_res = self.cat.multiprocessing(MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=nproc)
+            ann_res = self.cat.multiprocessing(
+                MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=nproc)
         except Exception as e:
             self.log.error(repr(e))
 
@@ -196,10 +191,10 @@ class MedCatProcessor(NlpProcessor):
         vocab = Vocab.load(os.getenv("APP_MODEL_VOCAB_PATH"))
 
         self.log.debug("Loading CDB ...")
-        
+
         cdb = CDB.load(os.getenv("APP_MODEL_CDB_PATH"))
-        
-        cdb.config.general["spacy_model"] = os.getenv("SPACY_MODEL", "en_core_sci_md") 
+
+        cdb.config.general["spacy_model"] = os.getenv("SPACY_MODEL", "en_core_sci_md")
 
         # this is redundant as the config is already in the CDB
         conf = cdb.config
@@ -219,7 +214,7 @@ class MedCatProcessor(NlpProcessor):
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(":"):
                 m = MetaCAT.load(model_path)
                 meta_models.append(m)
-        
+
         cat = CAT(cdb=cdb, config=conf, vocab=vocab, meta_cats=meta_models)
         return cat
 
@@ -237,7 +232,8 @@ class MedCatProcessor(NlpProcessor):
         """
         for i in range(0, len(documents)):
             # assume the document to be processed only when it is not blank
-            if documents[i] is not None and "text" in documents[i] and documents[i]["text"] is not None and len(documents[i]["text"].strip()) > 0:
+            if documents[i] is not None and "text" in documents[i] and documents[i]["text"] is not None \
+                    and len(documents[i]["text"].strip()) > 0:
                 yield i, documents[i]["text"]
             else:
                 invalid_doc_idx.append(i)
@@ -251,7 +247,7 @@ class MedCatProcessor(NlpProcessor):
             :param invalid_doc_idx: array of invalid document idx
             :return:
         """
-        
+
         # generate output for valid annotations
         for i in range(len(annotations)):
             in_ct = in_documents[i]
@@ -260,10 +256,10 @@ class MedCatProcessor(NlpProcessor):
 
             # parse the result
             out_res = {"text": str(in_documents[i]["text"]),
-                    "annotations": entities,
-                    "success": True,
-                    "timestamp": NlpProcessor._get_timestamp()
-                    }
+                       "annotations": entities,
+                       "success": True,
+                       "timestamp": NlpProcessor._get_timestamp()
+                       }
             # append the footer
             if "footer" in in_ct:
                 out_res["footer"] = in_ct["footer"]
@@ -275,15 +271,15 @@ class MedCatProcessor(NlpProcessor):
             in_ct = in_documents[i]
 
             out_res = {"text": in_ct["text"],
-                    "annotations": [],
-                    "success": True,
-                    "timestamp": NlpProcessor._get_timestamp()
-                    }
+                       "annotations": [],
+                       "success": True,
+                       "timestamp": NlpProcessor._get_timestamp()
+                       }
             # append the footer
             if "footer" in in_ct:
                 out_res["footer"] = in_ct["footer"]
 
-            yield out_res   
+            yield out_res
 
     @staticmethod
     def _get_medcat_version():
