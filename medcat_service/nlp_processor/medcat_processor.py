@@ -38,10 +38,10 @@ class NlpProcessor:
     @staticmethod
     def _get_timestamp():
         """
-        Returns the current timestamp in ISO 8601 format. Formatted as "yyyy-MM-dd'T'HH:mm:ss.SSSXXX".
+        Returns the current timestamp in ISO 8601 format. Formatted as "yyyy-MM-dd"T"HH:mm:ss.SSSXXX".
         :return: timestamp string
         """
-        return datetime.now(tz=timezone.utc).isoformat(timespec='milliseconds')
+        return datetime.now(tz=timezone.utc).isoformat(timespec="milliseconds")
 
 
 class MedCatProcessor(NlpProcessor):
@@ -52,50 +52,57 @@ class MedCatProcessor(NlpProcessor):
     def __init__(self):
         super().__init__()
 
-        self.log.info('Initializing MedCAT processor ...')
-
-        # TODO: use a config file instead of env variables
-        #
+        self.log.info("Initializing MedCAT processor ...")
+      
         self.app_name = os.getenv("APP_NAME", "MedCAT")
         self.app_lang = os.getenv("APP_MODEL_LANGUAGE", "en")
         self.app_version = MedCatProcessor._get_medcat_version()
-        self.app_model = os.getenv("APP_MODEL_NAME", 'unknown')
+        self.app_model = os.getenv("APP_MODEL_NAME", "unknown")
+        self.entity_output_mode = os.getenv("ANNOTATIONS_ENTITY_OUTPUT_MODE", "list").lower()
 
         self.cat = self._create_cat()
-
         self.cat.train = os.getenv("APP_TRAINING_MODE", False)
 
-        self.bulk_nproc = int(os.getenv('APP_BULK_NPROC', 8))
+        self.bulk_nproc = int(os.getenv("APP_BULK_NPROC", 8))
 
-        self.log.info('MedCAT processor is ready')
+        self.log.info("MedCAT processor is ready")
 
     def get_app_info(self):
         """
         Returns general information about the application
         :return: application information stored as KVPs
         """
-        return {'service_app_name': self.app_name,
-                'service_language': self.app_lang,
-                'service_version': self.app_version,
-                'service_model': self.app_model}
+        return {"service_app_name": self.app_name,
+                "service_language": self.app_lang,
+                "service_version": self.app_version,
+                "service_model": self.app_model}
+
+    def process_entities(self, entities):
+        if "entities" in entities.keys():
+            entities = entities["entities"]
+
+        if self.entity_output_mode == "list":
+            return list(entities.values())
+        
+        return entities
 
     def process_content(self, content):
         """
         Processes a single document extracting the annotations.
-        :param content: document to be processed, containing 'text' field.
+        :param content: document to be processed, containing "text" field.
         :return: processing result containing document with extracted annotations stored as KVPs.
         """
-        if 'text' not in content:
+        if "text" not in content:
             error_msg = "'text' field missing in the payload content."
             nlp_result = {
-                          'success': False,
-                          'errors': [error_msg],
-                          'timestamp' : NlpProcessor._get_timestamp(),
+                          "success": False,
+                          "errors": [error_msg],
+                          "timestamp" : NlpProcessor._get_timestamp(),
                          }
                     
             return nlp_result
 
-        text = content['text']
+        text = content["text"]
 
         # assume an that a blank document is a valid document and process it only
         # when it contains any non-blank characters
@@ -103,28 +110,30 @@ class MedCatProcessor(NlpProcessor):
             entities = self.cat.get_entities(text)
         else:
             entities = []
-
+        
+        entities = self.process_entities(entities)
+        
         nlp_result = {
-                      'text': str(text),
-                      'annotations': dirtyjson.loads(str(entities)),
-                      'success': True,
-                      'timestamp': NlpProcessor._get_timestamp()
+                      "text": str(text),
+                      "annotations": entities,
+                      "success": True,
+                      "timestamp": NlpProcessor._get_timestamp()
                       }
 
         # append the footer
-        if 'footer' in content:
-            nlp_result['footer'] = content['footer']
+        if "footer" in content:
+            nlp_result["footer"] = content["footer"]
         
         return nlp_result
 
     def process_content_bulk(self, content):
         """
         Processes an array of documents extracting the annotations.
-        :param content: document to be processed, containing 'text' field.
+        :param content: document to be processed, containing "text" field.
         :return: processing result containing documents with extracted annotations, stored as KVPs.
         """
 
-        # process at least 10 docs per thread and don't bother with starting
+        # process at least 10 docs per thread and don"t bother with starting
         # additional threads when less documents were provided
         min_doc_per_thread = 10
         num_slices = max(1, int(len(content) / min_doc_per_thread))
@@ -148,27 +157,27 @@ class MedCatProcessor(NlpProcessor):
         except Exception as e:
             self.log.error(repr(e))
 
-        return MedCatProcessor._generate_result(content, ann_res, invalid_doc_ids)
+        return self._generate_result(content, ann_res, invalid_doc_ids)
 
     def retrain_medcat(self, content, replace_cdb):
         """
         Retrains Medcat and redeploys model
         """
 
-        with open('/cat/models/data.json', 'w') as f:
+        with open("/cat/models/data.json", "w") as f:
             json.dump(content, f)
 
-        DATA_PATH = '/cat/models/data.json'
-        CDB_PATH = '/cat/models/cdb.dat'
-        VOCAB_PATH = '/cat/models/vocab.dat'
+        DATA_PATH = "/cat/models/data.json"
+        CDB_PATH = "/cat/models/cdb.dat"
+        VOCAB_PATH = "/cat/models/vocab.dat"
 
-        self.log.info('Retraining Medcat Started...')
+        self.log.info("Retraining Medcat Started...")
 
         p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._retrain_supervised(self, CDB_PATH, DATA_PATH, VOCAB_PATH)
 
-        self.log.info('Retraining Medcat Completed...')
+        self.log.info("Retraining Medcat Completed...")
 
-        return {'results': [p, r, f1, tp_dict, fp_dict, fn_dict]}
+        return {"results": [p, r, f1, tp_dict, fp_dict, fn_dict]}
 
     # helper MedCAT methods
     #
@@ -183,10 +192,10 @@ class MedCatProcessor(NlpProcessor):
             raise Exception("Concept database (env: APP_MODEL_CDB_PATH) not specified")
 
         # Vocabulary and Concept Database are mandatory
-        self.log.debug('Loading VOCAB ...')
+        self.log.debug("Loading VOCAB ...")
         vocab = Vocab.load(os.getenv("APP_MODEL_VOCAB_PATH"))
 
-        self.log.debug('Loading CDB ...')
+        self.log.debug("Loading CDB ...")
         
         cdb = CDB.load(os.getenv("APP_MODEL_CDB_PATH"))
         
@@ -197,7 +206,7 @@ class MedCatProcessor(NlpProcessor):
 
         # Apply CUI filter if provided
         if os.getenv("APP_MODEL_CUI_FILTER_PATH") is not None:
-            self.log.debug('Applying CDB CUI filter ...')
+            self.log.debug("Applying CDB CUI filter ...")
             with open(os.getenv("APP_MODEL_CUI_FILTER_PATH")) as cui_file:
                 all_lines = (line.rstrip() for line in cui_file)
                 selected_cuis = [line for line in all_lines if line]  # filter blank lines
@@ -206,8 +215,8 @@ class MedCatProcessor(NlpProcessor):
         # Meta-annotation models are optional
         meta_models = []
         if os.getenv("APP_MODEL_META_PATH_LIST") is not None:
-            self.log.debug('Loading META annotations ...')
-            for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(':'):
+            self.log.debug("Loading META annotations ...")
+            for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(":"):
                 m = MetaCAT.load(model_path)
                 meta_models.append(m)
         
@@ -222,41 +231,42 @@ class MedCatProcessor(NlpProcessor):
             Generator function returning documents to be processed as a list of tuples:
             (idx, text), (idx, text), ...
             Skips empty documents and reports their ids to the invalid_doc_idx array
-            :param documents: array of input documents that contain 'text' field
+            :param documents: array of input documents that contain "text" field
             :param invalid_doc_idx:  array that will contain invalid document idx
             :return: consecutive tuples of (idx, document)
         """
         for i in range(0, len(documents)):
             # assume the document to be processed only when it is not blank
-            if documents[i] is not None and 'text' in documents[i] and documents[i]['text'] is not None and len(documents[i]['text'].strip()) > 0:
-                yield i, documents[i]['text']
+            if documents[i] is not None and "text" in documents[i] and documents[i]["text"] is not None and len(documents[i]["text"].strip()) > 0:
+                yield i, documents[i]["text"]
             else:
                 invalid_doc_idx.append(i)
 
-    @staticmethod
-    def _generate_result(in_documents, annotations, invalid_doc_idx):
+    def _generate_result(self, in_documents, annotations, invalid_doc_idx):
         """
-        Generator function merging the resulting annotations with the input documents.
-        The result for documents that were invalid will not contain any annotations.
-        :param in_documents: array of input documents that contain 'text' field
-        :param annotations: array of annotations extracted from documents
-        :param invalid_doc_idx: array of invalid document idx
-        :return:
+            Generator function merging the resulting annotations with the input documents.
+            The result for documents that were invalid will not contain any annotations.
+            :param in_documents: array of input documents that contain "text" field
+            :param annotations: array of annotations extracted from documents
+            :param invalid_doc_idx: array of invalid document idx
+            :return:
         """
         
         # generate output for valid annotations
         for i in range(len(annotations)):
             in_ct = in_documents[i]
 
+            entities = self.process_entities(annotations[i])
+
             # parse the result
-            out_res = {'text': str(in_documents[i]["text"]),
-                    'annotations': dirtyjson.loads(str(annotations[i]["entities"])),
-                    'success': True,
-                    'timestamp': NlpProcessor._get_timestamp()
+            out_res = {"text": str(in_documents[i]["text"]),
+                    "annotations": entities,
+                    "success": True,
+                    "timestamp": NlpProcessor._get_timestamp()
                     }
             # append the footer
-            if 'footer' in in_ct:
-                out_res['footer'] = in_ct['footer']
+            if "footer" in in_ct:
+                out_res["footer"] = in_ct["footer"]
 
             yield out_res
 
@@ -264,14 +274,14 @@ class MedCatProcessor(NlpProcessor):
         for i in invalid_doc_idx:
             in_ct = in_documents[i]
 
-            out_res = {'text': in_ct["text"],
-                    'annotations': [],
-                    'success': True,
-                    'timestamp': NlpProcessor._get_timestamp()
+            out_res = {"text": in_ct["text"],
+                    "annotations": [],
+                    "success": True,
+                    "timestamp": NlpProcessor._get_timestamp()
                     }
             # append the footer
-            if 'footer' in in_ct:
-                out_res['footer'] = in_ct['footer']
+            if "footer" in in_ct:
+                out_res["footer"] = in_ct["footer"]
 
             yield out_res   
 
@@ -283,9 +293,9 @@ class MedCatProcessor(NlpProcessor):
         """
         try:
             import subprocess
-            result = subprocess.check_output(['pip', 'show', 'medcat'], universal_newlines=True)
-            version_line = list(filter(lambda v: 'Version' in v, result.split('\n')))
-            return version_line[0].split(' ')[1]
+            result = subprocess.check_output(["pip", "show", "medcat"], universal_newlines=True)
+            version_line = list(filter(lambda v: "Version" in v, result.split("\n")))
+            return version_line[0].split(" ")[1]
         except Exception:
             raise Exception("Cannot read the MedCAT library version")
 
@@ -298,29 +308,29 @@ class MedCatProcessor(NlpProcessor):
         cat = MedCatProcessor._create_cat(self)
 
         f1_base = MedCatProcessor._computeF1forDocuments(self, data, self.cat, correct_ids)[2]
-        self.log.info('Base model F1: ' + str(f1_base))
+        self.log.info("Base model F1: " + str(f1_base))
 
         cat.train = True
         cat.spacy_cat.MIN_ACC = os.getenv("MIN_ACC", 0.20)
         cat.spacy_cat.MIN_ACC_TH = os.getenv("MIN_ACC_TH", 0.20)
 
-        self.log.info('Starting supervised training...')
+        self.log.info("Starting supervised training...")
 
         try:
             cat.train_supervised(data_path=data_path, lr=1, test_size=0.1, use_groups=None, nepochs=3)
         except Exception:
-            self.log.info('Did not complete all supervised training')
+            self.log.info("Did not complete all supervised training")
 
         p, r, f1, tp_dict, fp_dict, fn_dict = MedCatProcessor._computeF1forDocuments(self, data, cat, correct_ids)
 
-        self.log.info('Trained model F1: ' + str(f1))
+        self.log.info("Trained model F1: " + str(f1))
 
         if MedCatProcessor._checkmodelimproved(f1, f1_base):
-            self.log.info('Model will be saved...')
+            self.log.info("Model will be saved...")
 
-            cat.cdb.save_dict('/cat/models/cdb_new.dat')
+            cat.cdb.save_dict("/cat/models/cdb_new.dat")
 
-        self.log.info('Completed Retraining Medcat...')
+        self.log.info("Completed Retraining Medcat...")
         return p, r, f1, tp_dict, fp_dict, fn_dict
 
     def _computeF1forDocuments(self, data, cat, correct_ids):
@@ -328,31 +338,31 @@ class MedCatProcessor(NlpProcessor):
         true_positives_dict, false_positives_dict, false_negatives_dict = {}, {}, {}
         true_positive_no, false_positive_no, false_negative_no = 0, 0, 0
 
-        for project in data['projects']:
+        for project in data["projects"]:
 
             predictions = {}
-            documents = project['documents']
-            true_positives_dict[project['id']] = {}
-            false_positives_dict[project['id']] = {}
-            false_negatives_dict[project['id']] = {}
+            documents = project["documents"]
+            true_positives_dict[project["id"]] = {}
+            false_positives_dict[project["id"]] = {}
+            false_negatives_dict[project["id"]] = {}
 
             for document in documents:
-                true_positives_dict[project['id']][document['id']] = {}
-                false_positives_dict[project['id']][document['id']] = {}
-                false_negatives_dict[project['id']][document['id']] = {}
+                true_positives_dict[project["id"]][document["id"]] = {}
+                false_positives_dict[project["id"]][document["id"]] = {}
+                false_negatives_dict[project["id"]][document["id"]] = {}
 
-                results = cat.get_entities(document['text'])
-                predictions[document['id']] = [[a['start'], a['end'], a['cui']] for a in results]
+                results = cat.get_entities(document["text"])
+                predictions[document["id"]] = [[a["start"], a["end"], a["cui"]] for a in results]
 
-                tps, fps, fns = self._getAccuraciesforDocument(correct_ids[project['id']][document['id']],
-                                                               predictions[document['id']])
+                tps, fps, fns = self._getAccuraciesforDocument(correct_ids[project["id"]][document["id"]],
+                                                               predictions[document["id"]])
                 true_positive_no += len(tps)
                 false_positive_no += len(fps)
                 false_negative_no += len(fns)
 
-                true_positives_dict[project['id']][document['id']] = tps
-                false_positives_dict[project['id']][document['id']] = fps
-                false_negatives_dict[project['id']][document['id']] = fns
+                true_positives_dict[project["id"]][document["id"]] = tps
+                false_positives_dict[project["id"]][document["id"]] = fps
+                false_negatives_dict[project["id"]][document["id"]] = fns
 
         if (true_positive_no + false_positive_no) == 0:
             precision = 0
@@ -372,15 +382,15 @@ class MedCatProcessor(NlpProcessor):
     @staticmethod
     def _prepareDocumentsForPeformanceAnalysis(data):
         correct_ids = {}
-        for project in data['projects']:
-            correct_ids[project['id']] = {}
+        for project in data["projects"]:
+            correct_ids[project["id"]] = {}
 
-            for document in project['documents']:
-                for entry in document['annotations']:
-                    if entry['correct']:
-                        if document['id'] not in correct_ids[project['id']]:
-                            correct_ids[project['id']][document['id']] = []
-                        correct_ids[project['id']][document['id']].append([entry['start'], entry['end'], entry['cui']])
+            for document in project["documents"]:
+                for entry in document["annotations"]:
+                    if entry["correct"]:
+                        if document["id"] not in correct_ids[project["id"]]:
+                            correct_ids[project["id"]][document["id"]] = []
+                        correct_ids[project["id"]][document["id"]].append([entry["start"], entry["end"], entry["cui"]])
 
         return correct_ids
 

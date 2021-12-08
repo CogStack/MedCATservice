@@ -4,6 +4,6 @@ injector==0.18.4
 flask-injector==0.13.0
 scikit-learn~=1.0
 dirtyjson~=1.0.7
-medcat~=1.2.5
+medcat==1.2.6
 setuptools~=58.5.3
 simplejson~=3.17.5

@@ -84,24 +84,171 @@ example bulk result :
 
 ```
 {
-    "result": [
-        {
-         "text": "The patient was diagnosed with leukemia.",
-         "annotations": {"0": {"pretty_name": "Patients", "cui": "C0030705", "type_ids": ["T101"], "types": ["Patient or Disabled Group"], "source_value": "patient", "detected_name": "patient", "acc": 0.99, "context_similarity": 0.99, "start": 4, "end": 11, "id": 0, "meta_anns": {"Status": {"value": "Affirmed", "confidence": 0.9999303817749023, "name": "Status"}}}, "1": {"pretty_name": "Diagnosis", "cui": "C0011900", "type_ids": ["T060"], "types": ["Diagnostic Procedure"], "source_value": "diagnosed", "detected_name": "diagnosed", "acc": 0.6657139492748229, "context_similarity": 0.6657139492748229, "start": 16, "end": 25, "id": 1, "meta_anns": {"Status": {"value": "Affirmed", "confidence": 0.9999918341636658, "name": "Status"}}}, "2": {"pretty_name": "leukemia", "cui": "C0023418", "type_ids": ["T191"], "types": ["Neoplastic Process"], "source_value": "leukemia", "detected_name": "leukemia", "acc": 0.2572544372951888, "context_similarity": 0.2572544372951888, "start": 31, "end": 39, "id": 2, "meta_anns": {"Status": {"value": "Affirmed", "confidence": 0.9999804496765137, "name": "Status"}}}}, "success": true, "timestamp": "2021-11-11T11:50:12.725+00:00"
+  "result": [
+    {
+      "text": "The patient was diagnosed with leukemia.",
+      "annotations": {
+        "0": {
+          "pretty_name": "Patients",
+          "cui": "C0030705",
+          "type_ids": [
+            "T101"
+          ],
+          "types": [
+            "Patient or Disabled Group"
+          ],
+          "source_value": "patient",
+          "detected_name": "patient",
+          "acc": 0.99,
+          "context_similarity": 0.99,
+          "start": 4,
+          "end": 11,
+          "id": 0,
+          "meta_anns": {
+            "Status": {
+              "value": "Affirmed",
+              "confidence": 0.9999303817749023,
+              "name": "Status"
+            }
+          }
         },
-        {
-          "text": "The patient was diagnosed with cancer.", "annotations": {"0": {"pretty_name": "Patients", "cui": "C0030705", "type_ids": ["T101"], "types": ["Patient or Disabled Group"], "source_value": "patient", "detected_name": "patient", "acc": 0.99, "context_similarity": 0.99, "start": 4, "end": 11, "id": 0, "meta_anns": {"Status": {"value": "Affirmed", "confidence": 0.9999236464500427, "name": "Status"}}}, "2": {"pretty_name": "cancer diagnosis", "cui": "C0920688", "type_ids": ["T060"], "types": ["Diagnostic Procedure"], "source_value": "diagnosed with cancer", "detected_name": "diagnosed~with~cancer", "acc": 1.0, "context_similarity": 1.0, "start": 16, "end": 37, "id": 2, "meta_anns": {"Status": {"value": "Affirmed", "confidence": 0.9999957084655762, "name": "Status"}}}
+        "1": {
+          "pretty_name": "Diagnosis",
+          "cui": "C0011900",
+          "type_ids": [
+            "T060"
+          ],
+          "types": [
+            "Diagnostic Procedure"
+          ],
+          "source_value": "diagnosed",
+          "detected_name": "diagnosed",
+          "acc": 0.6657139492748229,
+          "context_similarity": 0.6657139492748229,
+          "start": 16,
+          "end": 25,
+          "id": 1,
+          "meta_anns": {
+            "Status": {
+              "value": "Affirmed",
+              "confidence": 0.9999918341636658,
+              "name": "Status"
+            }
+          }
         },
-         "success": true,
-         "timestamp": "2021-11-11T11:50:12.726+00:00"}
-        ],
-    "medcat_info": {"service_app_name": "MedCAT", "service_language": "en", "service_version": "1.2.5", "service_model": "MedMen"}
+        "2": {
+          "pretty_name": "leukemia",
+          "cui": "C0023418",
+          "type_ids": [
+            "T191"
+          ],
+          "types": [
+            "Neoplastic Process"
+          ],
+          "source_value": "leukemia",
+          "detected_name": "leukemia",
+          "acc": 0.2572544372951888,
+          "context_similarity": 0.2572544372951888,
+          "start": 31,
+          "end": 39,
+          "id": 2,
+          "meta_anns": {
+            "Status": {
+              "value": "Affirmed",
+              "confidence": 0.9999804496765137,
+              "name": "Status"
+            }
+          }
+        }
+      },
+      "success": true,
+      "timestamp": "2021-12-08T18:49:55.255+00:00"
+    },
+    {
+      "text": "The patient was diagnosed with cancer.",
+      "annotations": {
+        "0": {
+          "pretty_name": "Patients",
+          "cui": "C0030705",
+          "type_ids": [
+            "T101"
+          ],
+          "types": [
+            "Patient or Disabled Group"
+          ],
+          "source_value": "patient",
+          "detected_name": "patient",
+          "acc": 0.99,
+          "context_similarity": 0.99,
+          "start": 4,
+          "end": 11,
+          "id": 0,
+          "meta_anns": {
+            "Status": {
+              "value": "Affirmed",
+              "confidence": 0.9999236464500427,
+              "name": "Status"
+            }
+          }
+        },
+        "2": {
+          "pretty_name": "cancer diagnosis",
+          "cui": "C0920688",
+          "type_ids": [
+            "T060"
+          ],
+          "types": [
+            "Diagnostic Procedure"
+          ],
+          "source_value": "diagnosed with cancer",
+          "detected_name": "diagnosed~with~cancer",
+          "acc": 1,
+          "context_similarity": 1,
+          "start": 16,
+          "end": 37,
+          "id": 2,
+          "meta_anns": {
+            "Status": {
+              "value": "Affirmed",
+              "confidence": 0.9999957084655762,
+              "name": "Status"
+            }
+          }
+        }
+      },
+      "success": true,
+      "timestamp": "2021-12-08T18:49:55.255+00:00"
+    }
+  ],
+  "medcat_info": {
+    "service_app_name": "MedCAT",
+    "service_language": "en",
+    "service_version": "1.2.6",
+    "service_model": "MedMen"
+  }
 }
+
 ```
 
+<strong>IMPORTANT info regarding annotation output style</strong><br>
+As the changes from MedCAT intoduced dictionary annotation/entity output.
 
+The mode in which annotation entities should be outputted in the JSON response,
+   by default this is set to "list" of dicts, so the output would be :
+   ```
+    {"annotations": [{"id": "0", "cui" : "C1X..", ..}, {"id":"1", "cui": "...."}]}
+   ```
+   newer versions of MedCAT (1.2+) output entities as a dict, where the id of the entity is a key and the rest of the data is a value, so for "dict",
+   the output is
+   ```
+    {"annotations": [{"0": {"cui": "C0027361", "id": 0,.....}, "1": {"cui": "C001111", "id": 1......}]}
+   ```
+This setting can be configured in the ```./envs/env_medcat``` file, using the ```ANNOTATIONS_ENTITY_OUTPUT_MODE``` variable.
+
+<br>
 Please note that the returned NLP annotations will depend on the underlying model used. For evaluation, we can only provide a very basic model trained on [MedMentions](https://github.com/chanzuckerberg/MedMentions). Models utilising [SNOMED CT](https://www.england.nhs.uk/digitaltechnology/digital-primary-care/snomed-ct/) or [UMLS](https://www.nlm.nih.gov/research/umls/index.html) may require applying for licenses from the copyright holders.
-
+<br>
+<br>
 
 # Configuration
 
