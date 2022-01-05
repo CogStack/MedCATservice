@@ -36,5 +36,5 @@ OMP_NUM_THREADS=1
 #    {"annotations": {"entities": {"0": {"cui": "C0027361", "id": 0,.....}, "1": {"cui": "C001111", "id": 1......}}
 #   Be mindful of this option as it can affect other services that rely directly on the responses of the service 
 #    (the NiFi groovy scripts and annotation ingester are two such services that process the output, and so they might require further customisation)
-# POSSIBLE VALUES: [list, dict], if left empty then "list" is the default.
+# POSSIBLE VALUES: [list, dict], if left empty then "dict" is the default.
 ANNOTATIONS_ENTITY_OUTPUT_MODE=dict

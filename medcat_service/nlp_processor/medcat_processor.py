@@ -51,7 +51,7 @@ class MedCatProcessor(NlpProcessor):
         self.app_lang = os.getenv("APP_MODEL_LANGUAGE", "en")
         self.app_version = MedCatProcessor._get_medcat_version()
         self.app_model = os.getenv("APP_MODEL_NAME", "unknown")
-        self.entity_output_mode = os.getenv("ANNOTATIONS_ENTITY_OUTPUT_MODE", "list").lower()
+        self.entity_output_mode = os.getenv("ANNOTATIONS_ENTITY_OUTPUT_MODE", "dict").lower()
 
         self.cat = self._create_cat()
         self.cat.train = os.getenv("APP_TRAINING_MODE", False)
