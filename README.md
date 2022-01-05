@@ -234,7 +234,7 @@ example bulk result :
 As the changes from MedCAT intoduced dictionary annotation/entity output.
 
 The mode in which annotation entities should be outputted in the JSON response,
-   by default this is set to "list" of dicts, so the output would be :
+   by default this was outputted as a "list" of dicts in older versions, so the output would be :
    ```
     {"annotations": [{"id": "0", "cui" : "C1X..", ..}, {"id":"1", "cui": "...."}]}
    ```
@@ -244,7 +244,7 @@ The mode in which annotation entities should be outputted in the JSON response,
     {"annotations": [{"0": {"cui": "C0027361", "id": 0,.....}, "1": {"cui": "C001111", "id": 1......}]}
    ```
 This setting can be configured in the ```./envs/env_medcat``` file, using the ```ANNOTATIONS_ENTITY_OUTPUT_MODE``` variable.
-
+By default, the output of these entities is set to respect the output of the MedCAT package, hence the latter will be used. Please change the above mentioned env variable and make sure your CogStack-Nifi annotation script is adapted accordingly.
 <br>
 Please note that the returned NLP annotations will depend on the underlying model used. For evaluation, we can only provide a very basic model trained on [MedMentions](https://github.com/chanzuckerberg/MedMentions). Models utilising [SNOMED CT](https://www.england.nhs.uk/digitaltechnology/digital-primary-care/snomed-ct/) or [UMLS](https://www.nlm.nih.gov/research/umls/index.html) may require applying for licenses from the copyright holders.
 <br>

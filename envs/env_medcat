@@ -37,4 +37,4 @@ OMP_NUM_THREADS=1
 #   Be mindful of this option as it can affect other services that rely directly on the responses of the service 
 #    (the NiFi groovy scripts and annotation ingester are two such services that process the output, and so they might require further customisation)
 # POSSIBLE VALUES: [list, dict], if left empty then "list" is the default.
-ANNOTATIONS_ENTITY_OUTPUT_MODE=list
+ANNOTATIONS_ENTITY_OUTPUT_MODE=dict
