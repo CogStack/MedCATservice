@@ -23,7 +23,7 @@ ANNEAL=False
 KEEP_PUNCT=:|.
 
 # can be left empty if you want to use the CDB spacy model, otherwise, possible values are : en_core_sci_lg, en_core_sci_md, etc...
-# please note that only 
+# please note that only SpaCy models that are installed on the docker container are usable (take a look at the .Dockerfile and install any other custom models you may want to use)
 SPACY_MODEL=
 
 MKL_NUM_THREAD=1
