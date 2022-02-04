@@ -38,9 +38,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install virtualenv
           python -m virtualenv venv-test
-          source venv-test/bin/activate
           python -m pip install -r medcat_service/requirements.txt
-          python -m pip install isort flake8 mypy types-Flask
+          python -m pip install isort flake8 mypy stubs types-Flask
 
       - name: Check linting and types
         run: |
