@@ -190,7 +190,7 @@ class MedCatProcessor(NlpProcessor):
             config = cat.config
         else:
             self.log.info("APP_MEDCAT_MODEL_PACK not set, skipping....")
-        
+
         # Vocabulary and Concept Database are mandatory
         if os.getenv("APP_MODEL_VOCAB_PATH") is None and cat is None:
             raise ValueError("Vocabulary (env: APP_MODEL_VOCAB_PATH) not specified")
@@ -236,13 +236,13 @@ class MedCatProcessor(NlpProcessor):
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(":"):
                 m = MetaCAT.load(model_path)
                 meta_models.append(m)
-       
+
         if cat:
             meta_models.extend(cat._meta_cats)
             cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
-        else:  
+        else:
             cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
-        
+
         return cat
 
     # helper generator functions to avoid multiple copies of data
