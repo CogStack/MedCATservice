@@ -42,11 +42,11 @@ jobs:
           python -m pip install -r medcat_service/requirements.txt
           python -m pip install isort flake8 mypy types-Flask
 
-      - name: Before script
+      - name: Check linting and types
         run: |
           isort -rc .
           flake8 .
-#          mypy . --ignore-missing-imports
+          mypy . --ignore-missing-imports
 
       - name: Run tests
         run: bash run_tests.sh

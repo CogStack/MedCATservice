@@ -127,7 +127,7 @@ class MedCatProcessor(NlpProcessor):
         :return: processing result containing documents with extracted annotations, stored as KVPs.
         """
 
-        # process at least 10 docs per thread and don"t bother with starting
+        # process at least 10 docs per thread and don't bother with starting
         # additional threads when less documents were provided
         min_doc_per_thread = 10
         num_slices = max(1, int(len(content) / min_doc_per_thread))
@@ -184,7 +184,7 @@ class MedCatProcessor(NlpProcessor):
         cat, cdb, vocab, config = None, None, None, None
 
         model_pack_path = os.getenv("APP_MEDCAT_MODEL_PACK", "").strip()
-        if not model_pack_path:
+        if model_pack_path != "":
             cat = CAT.load_model_pack(model_pack_path)
             cdb = cat.cdb
             config = cat.config
@@ -192,13 +192,13 @@ class MedCatProcessor(NlpProcessor):
             self.log.info("APP_MEDCAT_MODEL_PACK not set, skipping....")
 
         # Vocabulary and Concept Database are mandatory
-        if os.getenv("APP_MODEL_VOCAB_PATH") is None and cat is None:
+        if os.getenv("APP_MODEL_VOCAB_PATH", None) is None and cat is None:
             raise ValueError("Vocabulary (env: APP_MODEL_VOCAB_PATH) not specified")
         else:
             self.log.debug("Loading VOCAB ...")
             vocab = Vocab.load(os.getenv("APP_MODEL_VOCAB_PATH"))
 
-        if os.getenv("APP_MODEL_CDB_PATH") is None and cat is None:
+        if os.getenv("APP_MODEL_CDB_PATH", None) is None and cat is None:
             raise Exception("Concept database (env: APP_MODEL_CDB_PATH) not specified")
         else:
             self.log.debug("Loading CDB ...")
@@ -206,11 +206,11 @@ class MedCatProcessor(NlpProcessor):
 
         spacy_model = os.getenv("SPACY_MODEL", "")
 
-        if spacy_model:
+        if spacy_model != "":
             cdb.config.general["spacy_model"] == spacy_model
         else:
-            logging.warning("SPACY_MODEL environment var not set, \
-                attempting to load the spacy model found within the CDB : "
+            logging.warning("SPACY_MODEL environment var not set" +
+                            ", attempting to load the spacy model found within the CDB : "
                             + cdb.config.general["spacy_model"])
 
             if cdb.config.general["spacy_model"] == "":
@@ -221,8 +221,8 @@ class MedCatProcessor(NlpProcessor):
             # this is redundant as the config is already in the CDB
             config = cdb.config
 
-        # Apply CUI filter if provided
-        if os.getenv("APP_MODEL_CUI_FILTER_PATH") is not None:
+        # Apply CUI filtçççer if provided
+        if os.getenv("APP_MODEL_CUI_FILTER_PATH", None) is not None:
             self.log.debug("Applying CDB CUI filter ...")
             with open(os.getenv("APP_MODEL_CUI_FILTER_PATH")) as cui_file:
                 all_lines = (line.rstrip() for line in cui_file)
@@ -231,7 +231,7 @@ class MedCatProcessor(NlpProcessor):
 
         # Meta-annotation models are optional
         meta_models = []
-        if os.getenv("APP_MODEL_META_PATH_LIST") is not None:
+        if os.getenv("APP_MODEL_META_PATH_LIST", None) is not None:
             self.log.debug("Loading META annotations ...")
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(":"):
                 m = MetaCAT.load(model_path)
@@ -239,9 +239,8 @@ class MedCatProcessor(NlpProcessor):
 
         if cat:
             meta_models.extend(cat._meta_cats)
-            cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
-        else:
-            cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
+
+        cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
 
         return cat
 
