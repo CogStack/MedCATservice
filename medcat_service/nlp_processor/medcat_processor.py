@@ -180,19 +180,29 @@ class MedCatProcessor(NlpProcessor):
         """
         Loads MedCAT resources and creates CAT instance
         """
-        if os.getenv("APP_MODEL_VOCAB_PATH") is None:
-            raise ValueError("Vocabulary (env: APP_MODEL_VOCAB_PATH) not specified")
 
-        if os.getenv("APP_MODEL_CDB_PATH") is None:
-            raise Exception("Concept database (env: APP_MODEL_CDB_PATH) not specified")
+        cat, cdb, vocab, config = None, None, None, None
 
+        model_pack_path = os.getenv("APP_MEDCAT_MODEL_PACK", "").strip()
+        if not model_pack_path:
+            cat = CAT.load_model_pack(model_pack_path)
+            cdb = cat.cdb
+            config = cat.config
+        else:
+            self.log.info("APP_MEDCAT_MODEL_PACK not set, skipping....")
+        
         # Vocabulary and Concept Database are mandatory
-        self.log.debug("Loading VOCAB ...")
-        vocab = Vocab.load(os.getenv("APP_MODEL_VOCAB_PATH"))
+        if os.getenv("APP_MODEL_VOCAB_PATH") is None and cat is None:
+            raise ValueError("Vocabulary (env: APP_MODEL_VOCAB_PATH) not specified")
+        else:
+            self.log.debug("Loading VOCAB ...")
+            vocab = Vocab.load(os.getenv("APP_MODEL_VOCAB_PATH"))
 
-        self.log.debug("Loading CDB ...")
-
-        cdb = CDB.load(os.getenv("APP_MODEL_CDB_PATH"))
+        if os.getenv("APP_MODEL_CDB_PATH") is None and cat is None:
+            raise Exception("Concept database (env: APP_MODEL_CDB_PATH) not specified")
+        else:
+            self.log.debug("Loading CDB ...")
+            cdb = CDB.load(os.getenv("APP_MODEL_CDB_PATH"))
 
         spacy_model = os.getenv("SPACY_MODEL", "")
 
@@ -207,8 +217,9 @@ class MedCatProcessor(NlpProcessor):
                 raise ValueError("No SPACY_MODEL env var declared, the CDB loaded does not have a spacy_model set in the config variable! \
                  To solve this declare the SPACY_MODEL in the env_medcat file.")
 
-        # this is redundant as the config is already in the CDB
-        conf = cdb.config
+        if cat is None:
+            # this is redundant as the config is already in the CDB
+            config = cdb.config
 
         # Apply CUI filter if provided
         if os.getenv("APP_MODEL_CUI_FILTER_PATH") is not None:
@@ -225,8 +236,13 @@ class MedCatProcessor(NlpProcessor):
             for model_path in os.getenv("APP_MODEL_META_PATH_LIST").split(":"):
                 m = MetaCAT.load(model_path)
                 meta_models.append(m)
-
-        cat = CAT(cdb=cdb, config=conf, vocab=vocab, meta_cats=meta_models)
+       
+        if cat:
+            meta_models.extend(cat._meta_cats)
+            cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
+        else:  
+            cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
+        
         return cat
 
     # helper generator functions to avoid multiple copies of data
