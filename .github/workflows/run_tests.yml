@@ -43,7 +43,7 @@ jobs:
 
       - name: Check linting and types
         run: |
-          isort -rc .
+          isort .
           flake8 .
           mypy . --ignore-missing-imports
 

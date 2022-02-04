@@ -2,13 +2,13 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import sys
 import os
+import sys
 
 import flask_injector
 import injector
-
 from flask import Flask
+
 from medcat_service.api import api
 from medcat_service.nlp_processor import MedCatProcessor
 from medcat_service.nlp_service import MedCatService, NlpService

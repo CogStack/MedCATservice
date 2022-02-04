@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import traceback
 import os
+import traceback
+
 import simplejson as json
 from flask import Blueprint, Response, request
 

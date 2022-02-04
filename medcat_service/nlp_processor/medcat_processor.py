@@ -4,6 +4,7 @@
 import logging
 import os
 from datetime import datetime, timezone
+
 import simplejson as json
 from medcat.cat import CAT
 from medcat.cdb import CDB
