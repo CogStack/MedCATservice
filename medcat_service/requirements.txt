@@ -6,3 +6,4 @@ dirtyjson~=1.0.7
 medcat==1.2.6
 setuptools~=58.5.3
 simplejson~=3.17.5
+spacy>=3.1.0
