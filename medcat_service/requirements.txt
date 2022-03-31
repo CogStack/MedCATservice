@@ -2,8 +2,7 @@ Flask==2.0.2
 gunicorn==20.1.0
 injector==0.18.4
 flask-injector==0.13.0
-dirtyjson~=1.0.7
 medcat==1.2.8
 setuptools~=58.5.3
 simplejson~=3.17.5
-spacy>=3.1.4
+spacy>=3.1.0
