@@ -15,7 +15,7 @@ if [[ ! -f "$MODEL_CDB"  || ! -f "$MODEL_VCB" ]]; then
   
   # download the model as described in the MedCAT repo
   curl https://medcat.rosalind.kcl.ac.uk/media/vocab.dat > $MODEL_VCB
-  curl https://medcat.rosalind.kcl.ac.uk/media/cdb-medmen-v1.dat > $MODEL_CDB
+  curl https://medcat.rosalind.kcl.ac.uk/media/cdb-medmen-v1_2.dat > $MODEL_CDB
 else
   echo "MedMentions model already present -- skipping download"
 fi
