@@ -276,6 +276,11 @@ The following environment variables are available for tailoring the MedCAT Servi
 - `APP_TRAINING_MODE` - whether to run the application with MedCAT in training mode (default: `False`).
 - `APP_MEDCAT_MODEL_PACK` -  MedCAT Model Pack path, if this parameter has a value IT WILL BE LOADED FIRST OVER EVERYTHING ELSE (CDB, Vocab, MetaCATs, etc.) declared above.
 
+## Performance Tuning
+
+Theres a range of factors that might impact the performance of this service, the most obvious being the size of the processed documents (amount of text per document) as well as the resources of the machine on which the service operates.
+The main settings that can be used to improve the performance when querying large amounts of documents are : `SERVER_WORKERS` (number of flask web workers that chan handle parallel requests) and `APP_BULK_NPROC` (threads for annotation processing).
+
 ## MedCAT library
 MedCAT parameters are defined in selected `envs/env_medcat*`  file. 
 
