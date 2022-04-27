@@ -274,7 +274,7 @@ The following environment variables are available for tailoring the MedCAT Servi
 - `APP_MODEL_META_PATH_LIST` - the list of paths to meta-annotation models, each separated by `:` character (optional),
 - `APP_BULK_NPROC` - the number of threads used in bulk processing (default: `8`),
 - `APP_TRAINING_MODE` - whether to run the application with MedCAT in training mode (default: `False`).
-
+- `APP_MEDCAT_MODEL_PACK` -  MedCAT Model Pack path, if this parameter has a value IT WILL BE LOADED FIRST OVER EVERYTHING ELSE (CDB, Vocab, MetaCATs, etc.) declared above.
 
 ## MedCAT library
 MedCAT parameters are defined in selected `envs/env_medcat*`  file. 
