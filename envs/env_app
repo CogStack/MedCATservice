@@ -21,7 +21,7 @@ APP_MEDCAT_MODEL_PACK=
 # APP_MODEL_CUI_FILTER_PATH=/cat/models/cui_filter.txt
 
 # NLP processing
-APP_BULK_NPROC=8
+APP_BULK_NPROC=16
 APP_TRAINING_MODE=False
 
 # Flask server config
