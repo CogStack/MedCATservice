@@ -2,6 +2,7 @@ version: '3.5'
 
 services:
   medcat-service:
+    platform: linux
     build: ..
     restart: always
     environment:
