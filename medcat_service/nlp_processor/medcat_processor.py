@@ -77,9 +77,9 @@ class MedCatProcessor(NlpProcessor):
                 entities = entities["entities"]
 
             if self.entity_output_mode == "list":
-                return list(entities.values())
+                yield list(entities.values())
 
-        return entities
+        yield entities
 
     def process_content(self, content):
         """
@@ -240,6 +240,9 @@ class MedCatProcessor(NlpProcessor):
 
         if cat:
             meta_models.extend(cat._meta_cats)
+
+        medcat_log_level = logging.DEBUG if os.getenv("DEBUG", False) else logging.INFO
+        config.general["log_level"] = medcat_log_level
 
         cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
 

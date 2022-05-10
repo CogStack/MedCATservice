@@ -1,4 +1,4 @@
-DEBUG=True
+DEBUG=False
 
 # Additional settings
 APP_LOG_LEVEL=INFO
