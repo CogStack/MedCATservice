@@ -17,6 +17,11 @@ if [ -z ${SERVER_WORKERS+x} ]; then
   echo "SERVER_WORKERS is unset -- setting to default: $SERVER_WORKERS";
 fi
 
+if [ -z ${SERVER_THREADS+x} ]; then
+  SERVER_THREADS=1;
+  echo "SERVER_THREADS is unset -- setting to default: $SERVER_THREADS";
+fi
+
 if [ -z ${SERVER_WORKER_TIMEOUT+x} ]; then
   SERVER_WORKER_TIMEOUT=300;
   echo "SERVER_WORKER_TIMEOUT is unset -- setting to default (sec): $SERVER_WORKER_TIMEOUT";
@@ -28,6 +33,6 @@ SERVER_ACCESS_LOG_FORMAT="%(t)s [ACCESSS] %(h)s \"%(r)s\" %(s)s \"%(f)s\" \"%(a)
 # start the server
 #
 echo "Starting up Flask app using gunicorn server ..."
-gunicorn --bind $SERVER_HOST:$SERVER_PORT --workers=$SERVER_WORKERS --timeout=$SERVER_WORKER_TIMEOUT \
+gunicorn --bind $SERVER_HOST:$SERVER_PORT --workers=$SERVER_WORKERS --threads=$SERVER_THREADS --timeout=$SERVER_WORKER_TIMEOUT \
   --access-logformat="$SERVER_ACCESS_LOG_FORMAT" --access-logfile=- --log-file=- --log-level info \
   wsgi

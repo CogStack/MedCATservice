@@ -84,7 +84,7 @@ class MedCatProcessor(NlpProcessor):
                 entities = entities["entities"]
 
             if self.entity_output_mode == "list":
-                yield list(entities.values())
+                entities = list(entities.values())
 
         yield entities
 
@@ -145,6 +145,7 @@ class MedCatProcessor(NlpProcessor):
         # additional threads when less documents were provided
         min_doc_per_thread = 10
         num_slices = max(1, int(len(content) / min_doc_per_thread))
+      
         batch_size = min(300, num_slices)
 
         if batch_size >= self.bulk_nproc:
@@ -154,6 +155,8 @@ class MedCatProcessor(NlpProcessor):
             nproc = max(1, num_slices)
             if len(content) > batch_size * nproc:
                 nproc += 1
+
+        self.log.debug("NPROC:" +  str(nproc))
 
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
