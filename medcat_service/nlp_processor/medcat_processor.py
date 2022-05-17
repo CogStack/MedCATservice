@@ -4,6 +4,7 @@
 import logging
 import os
 from datetime import datetime, timezone
+import time
 
 import simplejson as json
 from medcat.cat import CAT
@@ -17,8 +18,14 @@ class NlpProcessor:
     This class defines an interface for NLP Processor
     """
     def __init__(self):
+        app_log_level = os.getenv("APP_LOG_LEVEL", logging.INFO)
+        medcat_log_level = os.getenv("LOG_LEVEL", logging.INFO)
+
         self.log = logging.getLogger(self.__class__.__name__)
-        self.log.setLevel(level=os.getenv("APP_LOG_LEVEL", logging.INFO))
+        self.log.setLevel(level=app_log_level)
+
+        self.log.debug("APP log level set to : ", str(app_log_level))
+        self.log.debug("MedCAT log level set to : ", str(medcat_log_level))
 
     def get_app_info(self):
         pass
@@ -101,10 +108,15 @@ class MedCatProcessor(NlpProcessor):
 
         # assume an that a blank document is a valid document and process it only
         # when it contains any non-blank characters
+
+        start_time_ns = time.time_ns()
+
         if text is not None and len(text.strip()) > 0:
             entities = self.cat.get_entities(text)
         else:
             entities = []
+
+        elapsed_time = (time.time_ns() - start_time_ns) / 10e8# nanoseconds to seconds
 
         entities = self.process_entities(entities)
 
@@ -112,7 +124,8 @@ class MedCatProcessor(NlpProcessor):
                       "text": str(text),
                       "annotations": entities,
                       "success": True,
-                      "timestamp": NlpProcessor._get_timestamp()
+                      "timestamp": NlpProcessor._get_timestamp(),
+                      "elapsed_time":  elapsed_time 
                       }
 
         # append the footer
@@ -147,13 +160,17 @@ class MedCatProcessor(NlpProcessor):
         invalid_doc_ids = []
         ann_res = []
 
+        start_time_ns = time.time_ns()
+
         try:
             ann_res = self.cat.multiprocessing(
                 MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=nproc)
         except Exception as e:
             self.log.error(repr(e))
 
-        return self._generate_result(content, ann_res, invalid_doc_ids)
+        additional_info = {"elapsed_time": str((time.time_ns() - start_time_ns) / 10e8)}
+
+        return self._generate_result(content, ann_res, invalid_doc_ids, additional_info)
 
     def retrain_medcat(self, content, replace_cdb):
         """
@@ -163,7 +180,7 @@ class MedCatProcessor(NlpProcessor):
         with open("/cat/models/data.json", "w") as f:
             json.dump(content, f)
 
-        DATA_PATH = "/cat/models/data.json"
+        DATA_PATH = "/cat/models/data.json" 
         CDB_PATH = "/cat/models/cdb.dat"
         VOCAB_PATH = "/cat/models/vocab.dat"
 
@@ -181,7 +198,6 @@ class MedCatProcessor(NlpProcessor):
         """
         Loads MedCAT resources and creates CAT instance
         """
-
         cat, cdb, vocab, config = None, None, None, None
 
         model_pack_path = os.getenv("APP_MEDCAT_MODEL_PACK", "").strip()
@@ -241,8 +257,7 @@ class MedCatProcessor(NlpProcessor):
         if cat:
             meta_models.extend(cat._meta_cats)
 
-        medcat_log_level = logging.DEBUG if os.getenv("DEBUG", False) else logging.INFO
-        config.general["log_level"] = medcat_log_level
+        config.general["log_level"] = os.getenv("LOG_LEVEL", logging.INFO)
 
         cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
 
@@ -268,7 +283,7 @@ class MedCatProcessor(NlpProcessor):
             else:
                 invalid_doc_idx.append(i)
 
-    def _generate_result(self, in_documents, annotations, invalid_doc_idx):
+    def _generate_result(self, in_documents, annotations, invalid_doc_idx, additional_info={}):
         """
             Generator function merging the resulting annotations with the input documents.
             The result for documents that were invalid will not contain any annotations.
@@ -288,8 +303,9 @@ class MedCatProcessor(NlpProcessor):
             out_res = {"text": str(in_documents[i]["text"]),
                        "annotations": entities,
                        "success": True,
-                       "timestamp": NlpProcessor._get_timestamp()
+                       "timestamp": NlpProcessor._get_timestamp(),
                        }
+            out_res.update(additional_info)
             # append the footer
             if "footer" in in_ct:
                 out_res["footer"] = in_ct["footer"]
