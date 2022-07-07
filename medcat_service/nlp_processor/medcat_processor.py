@@ -205,9 +205,9 @@ class MedCatProcessor(NlpProcessor):
 
         model_pack_path = os.getenv("APP_MEDCAT_MODEL_PACK", "").strip()
         if model_pack_path != "":
+            self.log.info("Loading model pack...")
             cat = CAT.load_model_pack(model_pack_path)
-            cdb = cat.cdb
-            config = cat.config
+            return cat
         else:
             self.log.info("APP_MEDCAT_MODEL_PACK not set, skipping....")
 
