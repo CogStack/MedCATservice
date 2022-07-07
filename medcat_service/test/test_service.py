@@ -16,7 +16,7 @@ class TestMedcatService(unittest.TestCase):
     """
 
     # Available endpoints
-    #
+    # 
     ENDPOINT_INFO_ENDPOINT = '/api/info'
     ENDPOINT_PROCESS_SINGLE = '/api/process'
     ENDPOINT_PROCESS_BULK = '/api/process_bulk'
