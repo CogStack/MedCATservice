@@ -48,7 +48,7 @@ def process(nlp_service: NlpService) -> Response:
         result = nlp_service.nlp.process_content(payload['content'])
         app_info = nlp_service.nlp.get_app_info()
         response = {'result': result, 'medcat_info': app_info}
-        return Response(response=json.dumps(response), status=200, mimetype="application/json")
+        return Response(response=json.dumps(response, iterable_as_array=True), status=200, mimetype="application/json")
 
     except Exception as e:
         log.error(traceback.format_exc())
