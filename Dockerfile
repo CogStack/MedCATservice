@@ -9,13 +9,8 @@ RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
 # Get the spacy model
-
-RUN python -m spacy download en_core_web_sm
-RUN python -m spacy download en_core_web_md
-RUN python -m spacy download en_core_web_lg
-
-#RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz
-#RUN pip install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz
+ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"
+RUN for spacy_model in ${SPACY_MODELS}; do python -m spacy download $spacy_model; done
 
 # Copy the remaining files
 COPY . /cat
