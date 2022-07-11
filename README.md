@@ -262,6 +262,9 @@ In the current implementation, configuration for both MedCAT Service application
 
 Both files allow tailoring MedCAT for specific use-cases. When running MedCAT Service, these variables need to be loaded into the current working environment.
 
+## spaCy models
+When using MedCAT for a different language than English, it can be useful to use a different spaCy model. A spaCy model can be included in the MedCAT model pack, but when not using this functionality, it can be useful to install models in the Docker image. This can be done by setting a build-time variable. See the `SPACY_MODELS` variable in [Dockerfile](Dockerfile) for default value and usage.
+
 ## MedCAT Service
 MedCAT Service application are defined in `envs/env_app` file.
 
