@@ -116,7 +116,7 @@ class MedCatProcessor(NlpProcessor):
         else:
             entities = []
 
-        elapsed_time = (time.time_ns() - start_time_ns) / 10e8# nanoseconds to seconds
+        elapsed_time = (time.time_ns() - start_time_ns) / 10e8  # nanoseconds to seconds
 
         entities = self.process_entities(entities)
 
@@ -125,7 +125,7 @@ class MedCatProcessor(NlpProcessor):
                       "annotations": entities,
                       "success": True,
                       "timestamp": NlpProcessor._get_timestamp(),
-                      "elapsed_time":  elapsed_time 
+                      "elapsed_time":  elapsed_time
                       }
 
         # append the footer
@@ -145,7 +145,7 @@ class MedCatProcessor(NlpProcessor):
         # additional threads when less documents were provided
         min_doc_per_thread = 10
         num_slices = max(1, int(len(content) / min_doc_per_thread))
-      
+
         batch_size = min(300, num_slices)
 
         if batch_size >= self.bulk_nproc:
@@ -156,7 +156,7 @@ class MedCatProcessor(NlpProcessor):
             if len(content) > batch_size * nproc:
                 nproc += 1
 
-        self.log.debug("NPROC:" +  str(nproc))
+        self.log.debug("NPROC:" + str(nproc))
 
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
@@ -183,7 +183,7 @@ class MedCatProcessor(NlpProcessor):
         with open("/cat/models/data.json", "w") as f:
             json.dump(content, f)
 
-        DATA_PATH = "/cat/models/data.json" 
+        DATA_PATH = "/cat/models/data.json"
         CDB_PATH = "/cat/models/cdb.dat"
         VOCAB_PATH = "/cat/models/vocab.dat"
 
@@ -205,9 +205,9 @@ class MedCatProcessor(NlpProcessor):
 
         model_pack_path = os.getenv("APP_MEDCAT_MODEL_PACK", "").strip()
         if model_pack_path != "":
+            self.log.info("Loading model pack...")
             cat = CAT.load_model_pack(model_pack_path)
-            cdb = cat.cdb
-            config = cat.config
+            return cat
         else:
             self.log.info("APP_MEDCAT_MODEL_PACK not set, skipping....")
 
