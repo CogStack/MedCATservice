@@ -13,9 +13,7 @@ services:
       - ../envs/env_app
       - ../envs/env_medcat
     volumes:
-    - ../models/medmen/vocab.dat:/cat/models/vocab.dat:ro
-    - ../models/medmen/cdb.dat:/cat/models/cdb.dat:ro
-    - ../models/medmen/Status:/cat/models/Status:ro
+    - ../models/medmen/:/cat/models/:ro
     #- ../models/modelpack.zip:/cat/models/modelpack.zip:ro
 
     ports:
