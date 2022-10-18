@@ -227,7 +227,7 @@ class MedCatProcessor(NlpProcessor):
         spacy_model = os.getenv("SPACY_MODEL", "")
 
         if spacy_model != "":
-            cdb.config.general["spacy_model"] == spacy_model
+            cdb.config.general["spacy_model"] = spacy_model
         else:
             logging.warning("SPACY_MODEL environment var not set" +
                             ", attempting to load the spacy model found within the CDB : "
