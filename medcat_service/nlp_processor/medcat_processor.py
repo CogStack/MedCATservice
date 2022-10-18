@@ -338,10 +338,9 @@ class MedCatProcessor(NlpProcessor):
         :return:
         """
         try:
-            import subprocess
-            result = subprocess.check_output(["pip", "show", "medcat"], universal_newlines=True)
-            version_line = list(filter(lambda v: "Version" in v, result.split("\n")))
-            return version_line[0].split(" ")[1]
+            import pkg_resources 
+            version = pkg_resources.require("medcat")[0].version
+            return str(version)
         except Exception:
             raise Exception("Cannot read the MedCAT library version")
 
