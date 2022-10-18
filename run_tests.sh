@@ -3,10 +3,9 @@ set -e
 
 # download the sci-scpacy language model
 python3 -m pip install -r medcat_service/requirements.txt
+python3 -m spacy download en_core_web_sm
 python3 -m spacy download en_core_web_md
 python3 -m spacy download en_core_web_lg
-pip3 install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_md-0.4.0.tar.gz
-pip3 install https://s3-us-west-2.amazonaws.com/ai2-s2-scispacy/releases/v0.4.0/en_core_sci_lg-0.4.0.tar.gz
 
 # download the test MedCAT model
 ( cd ./models && bash download_medmen.sh )

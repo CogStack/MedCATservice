@@ -142,7 +142,7 @@ class TestMedcatService(unittest.TestCase):
             self.assertEqual(response.status_code, 200)
 
             data = json.loads(response.get_data(as_text=True))
-            self.assertEqual(len(data["result"]["annotations"]), 0)
+            self.assertEqual(len(data["result"]["annotations"][0]), 0)
 
     def testProcessBulkBlankDocs(self):
         docs = common.get_blank_documents()
