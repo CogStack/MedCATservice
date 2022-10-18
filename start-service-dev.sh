@@ -16,6 +16,6 @@ fi
 #
 echo "Running Flask develoment server"
 export FLASK_APP=wsgi.py
-export FLASK_ENV=development
+export FLASK_DEBUG=true
 
 flask run --host $SERVER_HOST --port $SERVER_PORT
