@@ -338,7 +338,7 @@ class MedCatProcessor(NlpProcessor):
         :return:
         """
         try:
-            import pkg_resources 
+            import pkg_resources
             version = pkg_resources.require("medcat")[0].version
             return str(version)
         except Exception:
