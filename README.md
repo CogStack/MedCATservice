@@ -5,7 +5,10 @@ This project implements the [MedCAT](https://github.com/CogStack/MedCAT/) NLP ap
 Git Branches:
   - devel: development branch, latest updates and features, might be unstable.
   - master: stable releases
-  - legacy: branch for old MedCAT version (pre v1.0, new models wont work, only v0.x will)
+  - legacy: branch for old MedCAT version (pre v1.0, new models wont work, only v0.x models will)
+
+
+Feel free to ask questions on the github issue tracker or on our [discourse website](https://discourse.cogstack.org) which is frequently used by our development team!
 
 # API specification
 
@@ -49,10 +52,31 @@ docker run -it -p 5000:5000 \
 
 By default the MedCAT service will be running on port `5000`. MedCAT models will be mounted from local directory `<models-local-dir>` into the container at `/cat/models`. 
 
-Alternatively, an example script `./docker/run_example_medmen.sh` was provided to run the Docker container with MedCAT service. The script will download an example model (using `./models/download_medmen.sh` script), will use an example environment configuration, build and start the service using the provided Docker Compose file.
+### <span style="color:red">IMPORTANT !</span>
+If you wish to run this docker service manually, use the docker/docker-compose.yml file, execute `docker-compose up -d` whilst in the `docker` folder. 
 
+Alternatively, an example script `./docker/run_example_medmen.sh` was provided to run the Docker container with MedCAT service. The script will download an example model (using the `./models/download_medmen.sh` script),it will use an example environment configuration, then it will build and start the service using the provided Docker Compose file, the service <b><span style="color:red">WONT WORK</span></b> without the model being present.
 
-# Example use
+All models should be mounted from the `models/` folder.
+
+<br>
+
+### Manual docker start-up steps:
+```
+  1. cd ./models/
+  2. bash ./download_medmen.sh
+  3. cd ../docker/
+  4. docker-compose up -d
+  DONE!
+```
+Or, if you wish to use the above mentioned script ( the sample model is downloaded via script, you don't need to do anything):
+```
+  1. cd ./docker/
+  2. bash ./run_example_medmen.sh
+  DONE!
+```
+
+# API Example use
 
 Assuming that the application is running on the `localhost` with the API exposed on port `5000`, one can run:
 ```
