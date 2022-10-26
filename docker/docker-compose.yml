@@ -13,9 +13,7 @@ services:
       - ../envs/env_app
       - ../envs/env_medcat
     volumes:
-    - ../models/medmen/:/cat/models/:ro
-    #- ../models/modelpack.zip:/cat/models/modelpack.zip:ro
-
+    - ../models/medmen/:/cat/models/:rw
     ports:
       - "5000:5000"
 
