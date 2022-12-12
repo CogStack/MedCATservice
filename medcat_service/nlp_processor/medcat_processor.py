@@ -203,10 +203,22 @@ class MedCatProcessor(NlpProcessor):
         """
         cat, cdb, vocab, config = None, None, None, None
 
+        # Load CUIs to keep if provided
+        if os.getenv("APP_MODEL_CUI_FILTER_PATH", None) is not None:
+            self.log.debug("Loading CUI filter ...")
+            with open(os.getenv("APP_MODEL_CUI_FILTER_PATH")) as cui_file:
+                all_lines = (line.rstrip() for line in cui_file)
+                cuis_to_keep = [line for line in all_lines if line]  # filter blank lines
+
         model_pack_path = os.getenv("APP_MEDCAT_MODEL_PACK", "").strip()
         if model_pack_path != "":
             self.log.info("Loading model pack...")
             cat = CAT.load_model_pack(model_pack_path)
+
+            # Apply CUI filter if provided
+            if os.getenv("APP_MODEL_CUI_FILTER_PATH", None) is not None:
+                self.log.debug("Applying CUI filter ...")
+                cat.cdb.filter_by_cui(cuis_to_keep)
             return cat
         else:
             self.log.info("APP_MEDCAT_MODEL_PACK not set, skipping....")
@@ -242,13 +254,10 @@ class MedCatProcessor(NlpProcessor):
             # this is redundant as the config is already in the CDB
             config = cdb.config
 
-        # Apply CUI filtçççer if provided
+        # Apply CUI filter if provided
         if os.getenv("APP_MODEL_CUI_FILTER_PATH", None) is not None:
-            self.log.debug("Applying CDB CUI filter ...")
-            with open(os.getenv("APP_MODEL_CUI_FILTER_PATH")) as cui_file:
-                all_lines = (line.rstrip() for line in cui_file)
-                selected_cuis = [line for line in all_lines if line]  # filter blank lines
-                cdb.filter_by_cui(selected_cuis)
+            self.log.debug("Applying CUI filter ...")
+            cdb.filter_by_cui(cuis_to_keep)
 
         # Meta-annotation models are optional
         meta_models = []
