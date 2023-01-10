@@ -3,6 +3,6 @@ gunicorn==20.1.0
 injector==0.20.1
 flask-injector==0.14.0
 medcat==1.6.0
-setuptools==65.5.0
+setuptools==65.5.1
 simplejson==3.17.6
 werkzeug==2.2.2
