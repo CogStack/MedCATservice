@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
 # Set the python path and preapre the base layer
 WORKDIR /cat
