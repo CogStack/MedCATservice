@@ -2,6 +2,7 @@ version: "3.6"
 
 services:
   medcat-service:
+    container_name: medcat-service
     platform: linux
     build: ..
     restart: always
