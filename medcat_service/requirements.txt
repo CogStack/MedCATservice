@@ -5,4 +5,4 @@ flask-injector==0.14.0
 medcat==1.7.0
 setuptools==65.5.1
 simplejson==3.17.6
-werkzeug==2.2.2
+werkzeug==2.2.3
