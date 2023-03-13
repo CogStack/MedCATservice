@@ -66,6 +66,15 @@ class MedCatProcessor(NlpProcessor):
 
         self.bulk_nproc = int(os.getenv("APP_BULK_NPROC", 8))
 
+        self.torch_threads = int(os.getenv("APP_TORCH_THREADS", -1))
+        # this is available to constrain torch threads when there
+        # isn't a GPU
+        # You probably want to set to 1
+        if self.torch_threads > 0:
+            import torch
+            torch.set_num_threads(self.torch_threads)
+            self.log.info("Torch threads set to " + str(self.torch_threads))
+
         self.log.info("MedCAT processor is ready")
 
     def get_app_info(self):
