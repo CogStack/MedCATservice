@@ -66,6 +66,15 @@ class MedCatProcessor(NlpProcessor):
 
         self.bulk_nproc = int(os.getenv("APP_BULK_NPROC", 8))
 
+        self.torch_threads = int(os.getenv("APP_TORCH_THREADS", -1))
+        # this is available to constrain torch threads when there
+        # isn't a GPU
+        # You probably want to set to 1
+        if self.torch_threads > 0:
+            import torch
+            torch.set_num_threads(self.torch_threads)
+            self.log.info("Torch threads set to " + str(self.torch_threads))
+
         self.log.info("MedCAT processor is ready")
 
     def get_app_info(self):
@@ -306,34 +315,32 @@ class MedCatProcessor(NlpProcessor):
             :return:
         """
 
-        # generate output for valid annotations
-        for i in range(len(annotations)):
+
+        for i in range(len(in_documents)):
             in_ct = in_documents[i]
+            if i in annotations.keys():
+                # generate output for valid annotations
 
-            entities = self.process_entities(annotations[i])
+                entities = self.process_entities(annotations.get(i))
 
-            # parse the result
-            out_res = {"text": str(in_documents[i]["text"]),
-                       "annotations": entities,
-                       "success": True,
-                       "timestamp": NlpProcessor._get_timestamp(),
-                       }
-            out_res.update(additional_info)
-            # append the footer
-            if "footer" in in_ct:
-                out_res["footer"] = in_ct["footer"]
+                # parse the result
+                out_res = {"text": str(in_ct["text"]),
+                           "annotations": entities,
+                           "success": True,
+                           "timestamp": NlpProcessor._get_timestamp(),
+                }
+                out_res.update(additional_info)
+            else:
+                # Don't fetch an annotation set
+                # as the document was invalid
+                out_res = {"text": in_ct["text"],
+                           "annotations": [],
+                           "success": True,
+                           "timestamp": NlpProcessor._get_timestamp()
+                           } 
 
-            yield out_res
+               
 
-        # generate output for invalid documents
-        for i in invalid_doc_idx:
-            in_ct = in_documents[i]
-
-            out_res = {"text": in_ct["text"],
-                       "annotations": [],
-                       "success": True,
-                       "timestamp": NlpProcessor._get_timestamp()
-                       }
             # append the footer
             if "footer" in in_ct:
                 out_res["footer"] = in_ct["footer"]
