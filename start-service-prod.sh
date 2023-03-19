@@ -23,7 +23,7 @@ if [ -z ${SERVER_THREADS+x} ]; then
 fi
 
 if [ -z ${SERVER_WORKER_TIMEOUT+x} ]; then
-  SERVER_WORKER_TIMEOUT=300;
+  SERVER_WORKER_TIMEOUT=3600;
   echo "SERVER_WORKER_TIMEOUT is unset -- setting to default (sec): $SERVER_WORKER_TIMEOUT";
 fi
 
