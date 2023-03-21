@@ -24,8 +24,8 @@ class NlpProcessor:
         self.log = logging.getLogger(self.__class__.__name__)
         self.log.setLevel(level=app_log_level)
 
-        self.log.debug("APP log level set to : ", str(app_log_level))
-        self.log.debug("MedCAT log level set to : ", str(medcat_log_level))
+        self.log.debug("APP log level set to : " + str(app_log_level))
+        self.log.debug("MedCAT log level set to : " + str(medcat_log_level))
 
     def get_app_info(self):
         pass
