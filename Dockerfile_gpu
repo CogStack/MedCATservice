@@ -1,0 +1,43 @@
+FROM python:3.11-bookworm
+
+# nvidia-container-runtime
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+
+RUN apt-get install apt-transport-https ca-certificates curl gnupg-agent
+RUN apt-get install curl wget
+
+RUN echo "deb http://deb.debian.org/debian bookworm-backports main contrib non-free" | tee -a /etc/apt/sources.list
+RUN echo "deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free" | tee -a /etc/apt/sources.list
+
+RUN apt-get update && apt-get upgrade -y && \
+     apt-get install -y software-properties-common
+
+# NVIDIA Docker
+RUN export distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
+
+RUN curl -s -L https://nvidia.github.io/nvidia-docker/gpgkey > /etc/apt/keyrings/nvidia-docker.key
+RUN curl -s -L https://nvidia.github.io/nvidia-docker/debian11/nvidia-docker.list > /etc/apt/sources.list.d/nvidia-docker.list
+RUN sed -i -e "s/^deb/deb \[signed-by=\/etc\/apt\/keyrings\/nvidia-docker.key\]/g" /etc/apt/sources.list.d/nvidia-docker.list 
+
+RUN apt-get update && apt-get upgrade -y 
+
+RUN apt-get install -y nvidia-container-toolkit nvidia-docker2
+
+# Set the python path and preapre the base layer
+WORKDIR /cat
+COPY ./medcat_service/requirements.txt /cat
+RUN pip install --upgrade pip
+
+# Install requirements for the app
+RUN pip install -r requirements.txt
+
+# Get the spacy model
+ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"
+RUN for spacy_model in ${SPACY_MODELS}; do python -m spacy download $spacy_model; done
+
+# Copy the remaining files
+COPY . /cat
+
+# Now run the simple api
+CMD ["/bin/bash", "start-service-prod.sh"]
