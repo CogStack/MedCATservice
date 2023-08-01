@@ -85,7 +85,7 @@ jobs:
           file : "Dockerfile_gpu"
           allow: network.host
           github-token: ${{ github.token }}
-          tags: cogstacksystems//medcat-service-gpu:${{ env.RELEASE_VERSION }}
+          tags: cogstacksystems/medcat-service-gpu:${{ env.RELEASE_VERSION }}
           push: true
 
       - name: Image digest
