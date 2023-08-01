@@ -76,5 +76,17 @@ jobs:
           push: true
           labels: ${{ steps.meta.outputs.labels }}
 
+      
+      - name: Build and push Docker Jupyter singleuser image with GPU support
+        id: docker_build_gpu
+        uses: docker/build-push-action@v2
+        with:
+          context : .
+          file : "Dockerfile_gpu"
+          allow: network.host
+          github-token: ${{ github.token }}
+          tags: cogstacksystems//medcat-service-gpu:${{ env.RELEASE_VERSION }}
+          push: true
+
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
