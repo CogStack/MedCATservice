@@ -61,6 +61,7 @@ class MedCatProcessor(NlpProcessor):
         self.app_model = os.getenv("APP_MODEL_NAME", "unknown")
         self.entity_output_mode = os.getenv("ANNOTATIONS_ENTITY_OUTPUT_MODE", "dict").lower()
 
+
         self.cat = self._create_cat()
         self.cat.train = os.getenv("APP_TRAINING_MODE", False)
 
@@ -70,11 +71,13 @@ class MedCatProcessor(NlpProcessor):
         # this is available to constrain torch threads when there
         # isn't a GPU
         # You probably want to set to 1
+        # Not sure what happens if torch is using a cuda device
         if self.torch_threads > 0:
             import torch
             torch.set_num_threads(self.torch_threads)
             self.log.info("Torch threads set to " + str(self.torch_threads))
 
+            
         self.log.info("MedCAT processor is ready")
 
     def get_app_info(self):
