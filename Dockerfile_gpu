@@ -1,5 +1,7 @@
 FROM python:3.11-bookworm
 
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
 # nvidia-container-runtime
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility

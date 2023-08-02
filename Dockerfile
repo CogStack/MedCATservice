@@ -1,10 +1,11 @@
 FROM python:3.11-slim
 
+ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
 # Set the python path and preapre the base layer
 WORKDIR /cat
 COPY ./medcat_service/requirements.txt /cat
 RUN pip install --upgrade pip
-
 # Install requirements for the app
 RUN pip install -r requirements.txt
 
