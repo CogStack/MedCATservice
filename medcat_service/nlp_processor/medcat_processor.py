@@ -315,7 +315,6 @@ class MedCatProcessor(NlpProcessor):
             :return:
         """
 
-
         for i in range(len(in_documents)):
             in_ct = in_documents[i]
             if i in annotations.keys():
@@ -327,8 +326,7 @@ class MedCatProcessor(NlpProcessor):
                 out_res = {"text": str(in_ct["text"]),
                            "annotations": entities,
                            "success": True,
-                           "timestamp": NlpProcessor._get_timestamp(),
-                }
+                           "timestamp": NlpProcessor._get_timestamp()}
                 out_res.update(additional_info)
             else:
                 # Don't fetch an annotation set
@@ -336,10 +334,7 @@ class MedCatProcessor(NlpProcessor):
                 out_res = {"text": in_ct["text"],
                            "annotations": [],
                            "success": True,
-                           "timestamp": NlpProcessor._get_timestamp()
-                           } 
-
-               
+                           "timestamp": NlpProcessor._get_timestamp()}
 
             # append the footer
             if "footer" in in_ct:
