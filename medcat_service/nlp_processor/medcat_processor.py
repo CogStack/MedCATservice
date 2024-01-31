@@ -299,6 +299,8 @@ class MedCatProcessor(NlpProcessor):
 
         cat = CAT(cdb=cdb, config=config, vocab=vocab, meta_cats=meta_models)
 
+        self.app_model = config
+
         return cat
 
     # helper generator functions to avoid multiple copies of data

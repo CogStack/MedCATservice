@@ -52,6 +52,10 @@ docker run -it -p 5000:5000 \
 
 By default the MedCAT service will be running on port `5000`. MedCAT models will be mounted from local directory `<models-local-dir>` into the container at `/cat/models`. 
 
+### GPU support
+
+If you have a gpu and wish to use it, please change the `docker/docker-compose.yml` file, use the `cogstacksystems/medcat-service-gpu:latest` image or change the `build:` directive to build `../Dockerfile_gpu`.
+
 ### <span style="color:red">IMPORTANT !</span>
 If you wish to run this docker service manually, use the docker/docker-compose.yml file, execute `docker-compose up -d` whilst in the `docker` folder. 
 

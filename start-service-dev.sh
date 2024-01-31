@@ -14,7 +14,7 @@ fi
 
 # start the server
 #
-echo "Running Flask develoment server"
+echo "Running Flask development server"
 export FLASK_APP=wsgi.py
 export FLASK_DEBUG=true
 
