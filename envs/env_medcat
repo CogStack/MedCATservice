@@ -31,3 +31,5 @@ SPACY_MODEL=
 #    (the NiFi groovy scripts and annotation ingester are two such services that process the output, and so they might require further customisation)
 # POSSIBLE VALUES: [list, dict], if left empty then "dict" is the default.
 ANNOTATIONS_ENTITY_OUTPUT_MODE=dict
+
+DEID_MODE=False

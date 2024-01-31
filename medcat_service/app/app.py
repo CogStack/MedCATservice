@@ -5,8 +5,8 @@ import logging
 import os
 import sys
 
-import flask_injector
 import injector
+from flask_injector import FlaskInjector
 from flask import Flask
 
 from medcat_service.api import api
@@ -36,7 +36,6 @@ def setup_logging():
     if not handler_exists:
         root_logger.addHandler(log_handler)
 
-
 def create_app():
     """
     Creates the Flask application using the factory method
@@ -52,10 +51,9 @@ def create_app():
     def configure(binder):
         binder.bind(MedCatProcessor, to=MedCatProcessor, scope=injector.singleton)
         binder.bind(NlpService, to=MedCatService, scope=injector.singleton)
+    
 
-    flask_injector.FlaskInjector(
-        app=app,
-        modules=[configure])
-
+    FlaskInjector(app=app, modules=[configure])
+    
     # remember to return the app
     return app

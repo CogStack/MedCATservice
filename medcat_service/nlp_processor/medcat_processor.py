@@ -7,11 +7,14 @@ from datetime import datetime, timezone
 import time
 
 import simplejson as json
+import injector
+
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.meta_cat import MetaCAT
 from medcat.vocab import Vocab
 
+from medcat.utils.ner.deid import DeIdModel
 
 class NlpProcessor:
     """
@@ -50,6 +53,7 @@ class MedCatProcessor(NlpProcessor):
     MedCAT Processor class is wrapper over MedCAT that implements annotations extractions functionality
     (both single and bulk processing) that can be easily exposed for an API.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -61,13 +65,10 @@ class MedCatProcessor(NlpProcessor):
         self.app_model = os.getenv("APP_MODEL_NAME", "unknown")
         self.entity_output_mode = os.getenv("ANNOTATIONS_ENTITY_OUTPUT_MODE", "dict").lower()
 
-
-        self.cat = self._create_cat()
-        self.cat.train = os.getenv("APP_TRAINING_MODE", False)
-
         self.bulk_nproc = int(os.getenv("APP_BULK_NPROC", 8))
-
         self.torch_threads = int(os.getenv("APP_TORCH_THREADS", -1))
+        self.DEID_MODE = os.getenv("DEID_MODE", False)
+        
         # this is available to constrain torch threads when there
         # isn't a GPU
         # You probably want to set to 1
@@ -76,6 +77,9 @@ class MedCatProcessor(NlpProcessor):
             import torch
             torch.set_num_threads(self.torch_threads)
             self.log.info("Torch threads set to " + str(self.torch_threads))
+
+        self.cat = self._create_cat()
+        self.cat.train = os.getenv("APP_TRAINING_MODE", False)
 
             
         self.log.info("MedCAT processor is ready")
@@ -178,8 +182,13 @@ class MedCatProcessor(NlpProcessor):
         start_time_ns = time.time_ns()
 
         try:
-            ann_res = self.cat.multiprocessing(
-                MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=nproc)
+            if self.DEID_MODE:
+                ann_res = self.cat.deid_text()
+                pass
+            else:
+                ann_res = self.cat.multiprocessing(
+                    MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=nproc)
+
         except Exception as e:
             self.log.error(repr(e))
 
@@ -223,9 +232,13 @@ class MedCatProcessor(NlpProcessor):
                 cuis_to_keep = [line for line in all_lines if line]  # filter blank lines
 
         model_pack_path = os.getenv("APP_MEDCAT_MODEL_PACK", "").strip()
+
         if model_pack_path != "":
             self.log.info("Loading model pack...")
             cat = CAT.load_model_pack(model_pack_path)
+
+            if self.DEID_MODE:
+                cat = DeIdModel.load_model_pack(model_pack_path)
 
             # Apply CUI filter if provided
             if os.getenv("APP_MODEL_CUI_FILTER_PATH", None) is not None:
