@@ -1,4 +1,6 @@
 import os
+
+
 def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
     cuda_device_count = int(os.getenv("APP_CUDA_DEVICE_COUNT", -1))
@@ -15,4 +17,4 @@ def post_fork(server, worker):
     else:
         worker.log.info("APP_CUDA_DEVICE_COUNT device variables not set")
 
-    
+

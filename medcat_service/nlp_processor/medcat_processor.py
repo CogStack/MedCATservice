@@ -3,18 +3,16 @@
 
 import logging
 import os
-from datetime import datetime, timezone
 import time
+from datetime import datetime, timezone
 
 import simplejson as json
-import injector
-
 from medcat.cat import CAT
 from medcat.cdb import CDB
 from medcat.meta_cat import MetaCAT
+from medcat.utils.ner.deid import DeIdModel
 from medcat.vocab import Vocab
 
-from medcat.utils.ner.deid import DeIdModel
 
 class NlpProcessor:
     """
@@ -68,7 +66,7 @@ class MedCatProcessor(NlpProcessor):
         self.bulk_nproc = int(os.getenv("APP_BULK_NPROC", 8))
         self.torch_threads = int(os.getenv("APP_TORCH_THREADS", -1))
         self.DEID_MODE = os.getenv("DEID_MODE", False)
-        
+
         # this is available to constrain torch threads when there
         # isn't a GPU
         # You probably want to set to 1
@@ -81,7 +79,7 @@ class MedCatProcessor(NlpProcessor):
         self.cat = self._create_cat()
         self.cat.train = os.getenv("APP_TRAINING_MODE", False)
 
-            
+
         self.log.info("MedCAT processor is ready")
 
     def get_app_info(self):

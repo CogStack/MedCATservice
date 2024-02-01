@@ -6,8 +6,8 @@ import os
 import sys
 
 import injector
-from flask_injector import FlaskInjector
 from flask import Flask
+from flask_injector import FlaskInjector
 
 from medcat_service.api import api
 from medcat_service.nlp_processor import MedCatProcessor
@@ -51,9 +51,9 @@ def create_app():
     def configure(binder):
         binder.bind(MedCatProcessor, to=MedCatProcessor, scope=injector.singleton)
         binder.bind(NlpService, to=MedCatService, scope=injector.singleton)
-    
+
 
     FlaskInjector(app=app, modules=[configure])
-    
+
     # remember to return the app
     return app
