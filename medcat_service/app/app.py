@@ -36,6 +36,7 @@ def setup_logging():
     if not handler_exists:
         root_logger.addHandler(log_handler)
 
+
 def create_app():
     """
     Creates the Flask application using the factory method
@@ -51,7 +52,6 @@ def create_app():
     def configure(binder):
         binder.bind(MedCatProcessor, to=MedCatProcessor, scope=injector.singleton)
         binder.bind(NlpService, to=MedCatService, scope=injector.singleton)
-
 
     FlaskInjector(app=app, modules=[configure])
 
