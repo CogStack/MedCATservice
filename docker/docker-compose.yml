@@ -1,8 +1,8 @@
 version: "3.6"
 
 services:
-  medcat-service:
-    container_name: medcat-service
+  nlp-medcat-service-production:
+    container_name: cogstack-medcat-service-production
     ### Multiple images available:
     ## default image, only CPU support: cogstacksystems/medcat-service:latest 
     ## GPU support: cogstacksystems/medcat-service-gpu:latest
@@ -22,7 +22,12 @@ services:
       - ../envs/env_app
       - ../envs/env_medcat
     volumes:
-    - ../models/medmen/:/cat/models/:rw
+    - ../models:/cat/models/:rw
     ports:
       - "5555:5000"
-
+    networks:
+      - cognet
+      
+networks:
+  cognet:
+    name: cogstack-net
