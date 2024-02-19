@@ -219,9 +219,9 @@ class MedCatProcessor(NlpProcessor):
 
     def _populate_model_card_info(self, config: Config):
         self.model_card_info["ontologies"] = config.version.ontology \
-            if (type(config.version.ontology) == list) else str(config.version.ontology)
+            if (isinstance(config.version.ontology, list)) else str(config.version.ontology)
         self.model_card_info["meta_cat_model_names"] = [i["Category Name"] for i in config.version.meta_cats] \
-            if (type(config.version.meta_cats) == list) else str(config.version.meta_cats)
+            if (isinstance(config.version.meta_cats, list)) else str(config.version.meta_cats)
         self.model_card_info["model_last_modified_on"] = str(config.version.last_modified)
 
     # helper MedCAT methods
