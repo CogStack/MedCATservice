@@ -19,6 +19,7 @@ class NlpProcessor:
     """
     This class defines an interface for NLP Processor
     """
+
     def __init__(self):
         app_log_level = os.getenv("APP_LOG_LEVEL", logging.INFO)
         medcat_log_level = os.getenv("LOG_LEVEL", logging.INFO)
@@ -114,10 +115,10 @@ class MedCatProcessor(NlpProcessor):
         if "text" not in content:
             error_msg = "'text' field missing in the payload content."
             nlp_result = {
-                          "success": False,
-                          "errors": [error_msg],
-                          "timestamp": NlpProcessor._get_timestamp(),
-                         }
+                "success": False,
+                "errors": [error_msg],
+                "timestamp": NlpProcessor._get_timestamp(),
+            }
 
             return nlp_result
 
@@ -138,12 +139,12 @@ class MedCatProcessor(NlpProcessor):
         entities = self.process_entities(entities)
 
         nlp_result = {
-                      "text": str(text),
-                      "annotations": entities,
-                      "success": True,
-                      "timestamp": NlpProcessor._get_timestamp(),
-                      "elapsed_time":  elapsed_time
-                      }
+            "text": str(text),
+            "annotations": entities,
+            "success": True,
+            "timestamp": NlpProcessor._get_timestamp(),
+            "elapsed_time":  elapsed_time
+        }
 
         # append the footer
         if "footer" in content:
@@ -187,7 +188,7 @@ class MedCatProcessor(NlpProcessor):
                 ann_res = self.cat.deid_text()
             else:
                 ann_res = self.cat.multiprocessing_batch_docs_size(
-                    MedCatProcessor._generate_input_doc(content, invalid_doc_ids), batch_size = batch_size, nproc=nproc)
+                    MedCatProcessor._generate_input_doc(content, invalid_doc_ids), batch_size=batch_size, nproc=nproc)
 
         except Exception as e:
             self.log.error(repr(e))

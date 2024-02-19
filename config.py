@@ -16,5 +16,3 @@ def post_fork(server, worker):
         os.environ["CUDA_VISIBLE_DEVICES"] = str(cudaid)
     else:
         worker.log.info("APP_CUDA_DEVICE_COUNT device variables not set")
-
-

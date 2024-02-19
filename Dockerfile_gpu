@@ -14,7 +14,6 @@ RUN echo "deb-src http://deb.debian.org/debian bookworm-backports main contrib n
 
 RUN apt-get update && apt-get upgrade -y && \
      apt-get install -y software-properties-common
-
 # NVIDIA Docker
 RUN export distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
 
@@ -26,13 +25,19 @@ RUN apt-get update && apt-get upgrade -y
 
 RUN apt-get install -y nvidia-container-toolkit nvidia-docker2
 
+# clean up apt
+RUN apt-get clean autoclean && apt-get autoremove --purge -y
+
 # Set the python path and preapre the base layer
 WORKDIR /cat
 COPY ./medcat_service/requirements.txt /cat
 RUN pip install --upgrade pip
 
+# clean up pip
+RUN pip3 cache purge
+
 # Install requirements for the app
-RUN pip install -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
 
 # Get the spacy model
 ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"

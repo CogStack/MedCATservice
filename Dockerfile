@@ -6,8 +6,9 @@ ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 WORKDIR /cat
 COPY ./medcat_service/requirements.txt /cat
 RUN pip install --upgrade pip
+
 # Install requirements for the app
-RUN pip install -r requirements.txt
+RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Get the spacy model
 ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"
