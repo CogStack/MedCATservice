@@ -68,6 +68,7 @@ class MedCatProcessor(NlpProcessor):
         self.bulk_nproc = int(os.getenv("APP_BULK_NPROC", 8))
         self.torch_threads = int(os.getenv("APP_TORCH_THREADS", -1))
         self.DEID_MODE = os.getenv("DEID_MODE", "False")
+        self.DEID_REDACT = os.getenv("DEID_REDACT", True)
         self.model_card_info = {}
 
         # this is available to constrain torch threads when there
@@ -175,6 +176,7 @@ class MedCatProcessor(NlpProcessor):
                 nproc += 1
 
         self.log.debug("NPROC:" + str(nproc))
+        self.log.debug("Batch size:" + str(batch_size))
 
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
@@ -185,7 +187,9 @@ class MedCatProcessor(NlpProcessor):
 
         try:
             if eval(self.DEID_MODE):
-                ann_res = self.cat.deid_text()
+                for text_record in content:
+                    ann_res.append(text_record[0], self.cat.deid_text(text_record[1], redact=eval(self.DEID_REDACT)))
+                #ann_res = self.cat.deid_multi_texts(content, MedCatProcessor._generate_input_doc(content, invalid_doc_ids), batch_size=batch_size, nproc=nproc)
             else:
                 ann_res = self.cat.multiprocessing_batch_docs_size(
                     MedCatProcessor._generate_input_doc(content, invalid_doc_ids), batch_size=batch_size, nproc=nproc)
