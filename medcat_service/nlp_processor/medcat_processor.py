@@ -129,11 +129,15 @@ class MedCatProcessor(NlpProcessor):
         # when it contains any non-blank characters
 
         start_time_ns = time.time_ns()
-
-        if text is not None and len(text.strip()) > 0:
-            entities = self.cat.get_entities(text)
-        else:
-            entities = []
+        
+        if self.DEID_MODE:
+            entities = self.cat.get_entities(text)["entities"]
+            text = self.cat.deid_text(text, redact=self.DEID_REDACT)
+        else:  
+            if text is not None and len(text.strip()) > 0:
+                entities = self.cat.get_entities(text)
+            else:
+                entities = []
 
         elapsed_time = (time.time_ns() - start_time_ns) / 10e8  # nanoseconds to seconds
 
