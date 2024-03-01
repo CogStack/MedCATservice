@@ -67,8 +67,8 @@ class MedCatProcessor(NlpProcessor):
 
         self.bulk_nproc = int(os.getenv("APP_BULK_NPROC", 8))
         self.torch_threads = int(os.getenv("APP_TORCH_THREADS", -1))
-        self.DEID_MODE = os.getenv("DEID_MODE", "False")
-        self.DEID_REDACT = os.getenv("DEID_REDACT", True)
+        self.DEID_MODE = eval(os.getenv("DEID_MODE", "False"))
+        self.DEID_REDACT = eval(os.getenv("DEID_REDACT", "True"))
         self.model_card_info = {}
 
         # this is available to constrain torch threads when there
@@ -129,7 +129,7 @@ class MedCatProcessor(NlpProcessor):
         # when it contains any non-blank characters
 
         start_time_ns = time.time_ns()
-        
+
         if self.DEID_MODE:
             entities = self.cat.get_entities(text)["entities"]
             text = self.cat.deid_text(text, redact=self.DEID_REDACT)
@@ -190,10 +190,12 @@ class MedCatProcessor(NlpProcessor):
         start_time_ns = time.time_ns()
 
         try:
-            if eval(self.DEID_MODE):
+            if self.DEID_MODE:
+                _text_res = []
                 for text_record in content:
-                    ann_res.append(text_record[0], self.cat.deid_text(text_record[1], redact=eval(self.DEID_REDACT)))
-                #ann_res = self.cat.deid_multi_texts(content, MedCatProcessor._generate_input_doc(content, invalid_doc_ids), batch_size=batch_size, nproc=nproc)
+                    _text_res.append(self.cat.deid_text(text_record["text"], redact=self.DEID_REDACT))
+                content = [{"text": txt} for txt in _text_res]
+                self.log
             else:
                 ann_res = self.cat.multiprocessing_batch_docs_size(
                     MedCatProcessor._generate_input_doc(content, invalid_doc_ids), batch_size=batch_size, nproc=nproc)
@@ -253,7 +255,7 @@ class MedCatProcessor(NlpProcessor):
             self.log.info("Loading model pack...")
             cat = CAT.load_model_pack(model_pack_path)
 
-            if eval(self.DEID_MODE):
+            if self.DEID_MODE:
                 cat = DeIdModel.load_model_pack(model_pack_path)
 
             # Apply CUI filter if provided
@@ -360,7 +362,7 @@ class MedCatProcessor(NlpProcessor):
 
         for i in range(len(in_documents)):
             in_ct = in_documents[i]
-            if i in annotations.keys():
+            if not self.DEID_MODE and i in annotations.keys():
                 # generate output for valid annotations
 
                 entities = self.process_entities(annotations.get(i))
@@ -370,6 +372,12 @@ class MedCatProcessor(NlpProcessor):
                            "annotations": entities,
                            "success": True,
                            "timestamp": NlpProcessor._get_timestamp()}
+                out_res.update(additional_info)
+            elif self.DEID_MODE:
+                out_res = {"text": in_ct["text"],
+                        "annotations": [],
+                        "success": True,
+                        "timestamp": NlpProcessor._get_timestamp()}
                 out_res.update(additional_info)
             else:
                 # Don't fetch an annotation set
