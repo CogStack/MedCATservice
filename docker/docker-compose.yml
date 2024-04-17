@@ -27,6 +27,15 @@ services:
       - "5555:5000"
     networks:
       - cognet
+    
+    # uncomment this only when you have gpu access  
+    #deploy:
+    #  resources:
+    #    reservations:
+    #      devices:
+    #        - driver: nvidia
+    #          device_ids: ['0']
+    #          capabilities: ["gpu", "utility", "compute", "video"]
       
 networks:
   cognet:
