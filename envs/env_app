@@ -36,3 +36,5 @@ SERVER_THREADS=16
 # GPU SETTING
 # CAUTION, use only if you are using the GPU docker image.
 APP_TORCH_THREADS=0
+
+APP_CUDA_DEVICE_COUNT=-1
