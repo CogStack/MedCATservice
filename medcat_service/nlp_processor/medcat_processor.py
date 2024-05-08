@@ -133,7 +133,7 @@ class MedCatProcessor(NlpProcessor):
         if self.DEID_MODE:
             entities = self.cat.get_entities(text)["entities"]
             text = self.cat.deid_text(text, redact=self.DEID_REDACT)
-        else:  
+        else:
             if text is not None and len(text.strip()) > 0:
                 entities = self.cat.get_entities(text)
             else:
@@ -164,24 +164,6 @@ class MedCatProcessor(NlpProcessor):
         :return: processing result containing documents with extracted annotations, stored as KVPs.
         """
 
-        # process at least 10 docs per thread and don't bother with starting
-        # additional threads when less documents were provided
-        min_doc_per_thread = 10
-        num_slices = max(1, int(len(content) / min_doc_per_thread))
-
-        batch_size = min(300, num_slices)
-
-        if batch_size >= self.bulk_nproc:
-            nproc = self.bulk_nproc
-        else:
-            batch_size = min_doc_per_thread
-            nproc = max(1, num_slices)
-            if len(content) > batch_size * nproc:
-                nproc += 1
-
-        self.log.debug("NPROC:" + str(nproc))
-        self.log.debug("Batch size:" + str(batch_size))
-
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
         invalid_doc_ids = []
@@ -195,10 +177,9 @@ class MedCatProcessor(NlpProcessor):
                 for text_record in content:
                     _text_res.append(self.cat.deid_text(text_record["text"], redact=self.DEID_REDACT))
                 content = [{"text": txt} for txt in _text_res]
-                self.log
             else:
-                ann_res = self.cat.multiprocessing_batch_docs_size(
-                    MedCatProcessor._generate_input_doc(content, invalid_doc_ids), batch_size=batch_size, nproc=nproc)
+                ann_res = self.cat.multiprocessing_batch_char_size(
+                    MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=self.bulk_nproc)
 
         except Exception as e:
             self.log.error(repr(e))
@@ -375,9 +356,9 @@ class MedCatProcessor(NlpProcessor):
                 out_res.update(additional_info)
             elif self.DEID_MODE:
                 out_res = {"text": in_ct["text"],
-                        "annotations": [],
-                        "success": True,
-                        "timestamp": NlpProcessor._get_timestamp()}
+                           "annotations": [],
+                           "success": True,
+                           "timestamp": NlpProcessor._get_timestamp()}
                 out_res.update(additional_info)
             else:
                 # Don't fetch an annotation set
