@@ -1,9 +1,9 @@
 Flask==3.0.2
 gunicorn==22.0.0
-injector==0.20.1
+injector==0.21.0
 flask-injector==0.15.0
 medcat==1.10.2
 setuptools==65.5.1
-simplejson==3.17.6
-werkzeug==3.0.1
-setuptools_rust==1.6.0
+simplejson==3.19.2
+werkzeug==3.0.3
+setuptools_rust==1.9.0
