@@ -273,7 +273,7 @@ The mode in which annotation entities should be outputted in the JSON response,
    newer versions of MedCAT (1.2+) output entities as a dict, where the id of the entity is a key and the rest of the data is a value, so for "dict",
    the output is
    ```
-    {"annotations": [{"0": {"cui": "C0027361", "id": 0,.....}, "1": {"cui": "C001111", "id": 1......}]}
+    {"annotations": [{"0": {"cui": "C0027361", "id": 0,.....}, "1": {"cui": "C001111", "id": 1......}}]}
    ```
 This setting can be configured in the ```./envs/env_medcat``` file, using the ```ANNOTATIONS_ENTITY_OUTPUT_MODE``` variable.
 By default, the output of these entities is set to respect the output of the MedCAT package, hence the latter will be used. Please change the above mentioned env variable and make sure your CogStack-Nifi annotation script is adapted accordingly.
