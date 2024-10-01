@@ -57,7 +57,7 @@ By default the MedCAT service will be running on port `5000`. MedCAT models will
 If you have a gpu and wish to use it, please change the `docker/docker-compose.yml` file, use the `cogstacksystems/medcat-service-gpu:latest` image or change the `build:` directive to build `../Dockerfile_gpu`.
 
 ### <span style="color:red">IMPORTANT !</span>
-If you wish to run this docker service manually, use the docker/docker-compose.yml file, execute `docker-compose up -d` whilst in the `docker` folder. 
+If you wish to run this docker service manually, use the docker/docker-compose.yml file, execute `docker compose up -d` whilst in the `docker` folder. 
 
 Alternatively, an example script `./docker/run_example_medmen.sh` was provided to run the Docker container with MedCAT service. The script will download an example model (using the `./models/download_medmen.sh` script),it will use an example environment configuration, then it will build and start the service using the provided Docker Compose file, the service <b><span style="color:red">WONT WORK</span></b> without the model being present.
 
@@ -70,7 +70,7 @@ All models should be mounted from the `models/` folder.
   1. cd ./models/
   2. bash ./download_medmen.sh
   3. cd ../docker/
-  4. docker-compose up -d
+  4. docker compose up -d
   DONE!
 ```
 Or, if you wish to use the above mentioned script ( the sample model is downloaded via script, you don't need to do anything):
@@ -103,6 +103,14 @@ and the received result:
  "medcat_info": {"service_app_name": "MedCAT", "service_language": "en", "service_version": "1.2.5", "service_model": "MedMen"}
 }
 ```
+
+Additional DE-ID query sample (make sure you have a de-id model loaded):
+
+curl -XPOST http://localhost:5555/api/process \
+  -H 'Content-Type: application/json' \
+  -d '{"content":{"text":"Patient Information: Full Name: John Michael Doe \n Gender: Male \n Date of Birth: January 15, 1975 (Age: 49) \n Patient ID: 567890123 \n Address: 1234 Elm Street, Springfield, IL 62701 \n Phone Number: (555) 123-4567 \n Email: johnmdoe@example.com \n Emergency Contact: Jane Doe (Wife) \n Phone: (555) 987-6543 \n Relationship: Spouse"}}'
+
+Make sure you have the following option enabled in `envs/env_medcat` , `DEID_MODE=True`.
 
 process_bulk example :
 
@@ -273,7 +281,7 @@ The mode in which annotation entities should be outputted in the JSON response,
    newer versions of MedCAT (1.2+) output entities as a dict, where the id of the entity is a key and the rest of the data is a value, so for "dict",
    the output is
    ```
-    {"annotations": [{"0": {"cui": "C0027361", "id": 0,.....}, "1": {"cui": "C001111", "id": 1......}]}
+    {"annotations": [{"0": {"cui": "C0027361", "id": 0,.....}, "1": {"cui": "C001111", "id": 1......}}]}
    ```
 This setting can be configured in the ```./envs/env_medcat``` file, using the ```ANNOTATIONS_ENTITY_OUTPUT_MODE``` variable.
 By default, the output of these entities is set to respect the output of the MedCAT package, hence the latter will be used. Please change the above mentioned env variable and make sure your CogStack-Nifi annotation script is adapted accordingly.
