@@ -25,6 +25,33 @@ services:
       - "5555:5000"
     networks:
       - cognet
+
+  nlp-medcat-service-production-1:
+    container_name: cogstack-medcat-service-production-1
+    ### Multiple images available:
+    ## default image, only CPU support: cogstacksystems/medcat-service:latest 
+    ## GPU support: cogstacksystems/medcat-service-gpu:latest
+    # image: cogstacksystems/medcat-service:latest
+    platform: linux
+    restart: always
+    ## Default dockerfile: ../Dockerfile
+    ## GPU dockerfile: ../Dockerfile_gpu
+    build:
+      context: ../
+      dockerfile: "Dockerfile"
+    environment:
+      - http_proxy=$HTTP_PROXY
+      - https_proxy=$HTTPS_PROXY
+      - no_proxy=$no_proxy
+    env_file:
+      - ../envs/env_app_1
+      - ../envs/env_medcat_1
+    volumes:
+    - ../models:/cat/models/:rw
+    ports:
+      - "5556:5000"
+    networks:
+      - cognet
       
 networks:
   cognet:

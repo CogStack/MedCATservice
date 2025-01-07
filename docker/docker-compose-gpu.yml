@@ -32,7 +32,43 @@ services:
           devices:
             - driver: nvidia
               count: 1
-              device_ids: ['0']
+              #device_ids: ['0']
+              capabilities: ["gpu", "utility", "compute", "video"]
+
+  nlp-medcat-service-production-1:
+    container_name: cogstack-medcat-service-production-1
+    ### Multiple images available:
+    ## default image, only CPU support: cogstacksystems/medcat-service:latest 
+    ## GPU support: cogstacksystems/medcat-service-gpu:latest
+    # image: cogstacksystems/medcat-service:latest
+    platform: linux
+    restart: always
+    ## Default dockerfile: ../Dockerfile
+    ## GPU dockerfile: ../Dockerfile_gpu
+    build:
+      context: ../
+      dockerfile: "Dockerfile_gpu"
+    environment:
+      - http_proxy=$HTTP_PROXY
+      - https_proxy=$HTTPS_PROXY
+      - no_proxy=$no_proxy
+    env_file:
+      - ../envs/env_app_1
+      - ../envs/env_medcat_1
+    volumes:
+    - ../models:/cat/models/:rw
+    ports:
+      - "5556:5000"
+    networks:
+      - cognet
+    
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              # device_ids: ['0']
               capabilities: ["gpu", "utility", "compute", "video"]
       
 networks:
