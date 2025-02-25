@@ -8,4 +8,4 @@ werkzeug==3.0.4
 setuptools_rust==1.10.1
 medcat==1.14.0
 # pinned because of issues with de-id models and past models (it will not do any de-id)
-transformers==4.39.1
+transformers==4.48.0
