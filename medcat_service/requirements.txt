@@ -4,7 +4,7 @@ injector==0.22.0
 flask-injector==0.15.0
 setuptools==75.1.0
 simplejson==3.19.3
-werkzeug==3.0.4
+werkzeug==3.0.6
 setuptools_rust==1.10.1
 medcat==1.15.0
 # pinned because of issues with de-id models and past models (it will not do any de-id)
