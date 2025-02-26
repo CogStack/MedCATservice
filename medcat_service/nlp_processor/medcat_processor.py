@@ -173,7 +173,8 @@ class MedCatProcessor(NlpProcessor):
 
         try:
             if self.DEID_MODE:
-                ann_res = self.cat.deid_multi_texts(MedCatProcessor._generate_input_doc(content, invalid_doc_ids), redact=self.DEID_REDACT)
+                ann_res = self.cat.deid_multi_texts(MedCatProcessor._generate_input_doc(content, invalid_doc_ids),
+                                                    redact=self.DEID_REDACT)
             else:
                 ann_res = self.cat.multiprocessing_batch_char_size(
                     MedCatProcessor._generate_input_doc(content, invalid_doc_ids), nproc=self.bulk_nproc)
