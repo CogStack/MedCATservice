@@ -6,6 +6,6 @@ setuptools==75.1.0
 simplejson==3.19.3
 werkzeug==3.0.4
 setuptools_rust==1.10.1
-medcat==1.14.0
+medcat==1.15.0
 # pinned because of issues with de-id models and past models (it will not do any de-id)
-transformers==4.39.1
+transformers>=4.34.0,<5.0.0

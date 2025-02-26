@@ -25,8 +25,8 @@ services:
     networks:
       - cognet
 
-  nlp-medcat-service-production-1:
-    container_name: cogstack-medcat-service-production-1-deid
+  nlp-medcat-service-production-deid:
+    container_name: cogstack-medcat-service-production-deid
     ### Multiple images available:
     ## default image, only CPU support: cogstacksystems/medcat-service:latest 
     ## GPU support: cogstacksystems/medcat-service-gpu:latest
