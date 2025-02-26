@@ -35,7 +35,7 @@ services:
               capabilities: ["gpu", "utility", "compute", "video"]
 
   nlp-medcat-service-production-1:
-    container_name: cogstack-medcat-service-production-1
+    container_name: cogstack-medcat-service-production-1-deid
     ### Multiple images available:
     ## default image, only CPU support: cogstacksystems/medcat-service:latest 
     ## GPU support: cogstacksystems/medcat-service-gpu:latest

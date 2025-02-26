@@ -16,8 +16,8 @@ services:
       - https_proxy=$HTTPS_PROXY
       - no_proxy=$no_proxy
     env_file:
-      - ../env/env_app
-      - ../env/env_medcat
+      - ../env/app.env
+      - ../env/medcat.env
     volumes:
     - ../models:/cat/models/:rw
     ports:
@@ -26,7 +26,7 @@ services:
       - cognet
 
   nlp-medcat-service-production-1:
-    container_name: cogstack-medcat-service-production-1
+    container_name: cogstack-medcat-service-production-1-deid
     ### Multiple images available:
     ## default image, only CPU support: cogstacksystems/medcat-service:latest 
     ## GPU support: cogstacksystems/medcat-service-gpu:latest
@@ -42,8 +42,8 @@ services:
       - https_proxy=$HTTPS_PROXY
       - no_proxy=$no_proxy
     env_file:
-      - ../env/env_app_1
-      - ../env/env_medcat_1
+      - ../env/app_1.env
+      - ../env/medcat_1.env
     volumes:
     - ../models:/cat/models/:rw
     ports:
