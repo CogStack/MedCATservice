@@ -6,11 +6,17 @@ venv-test
 tmp_cat.log
 __pycache__
 .mypy_cache
-*.pyc 
+*.pyc
 .pyc
 # skip the models directory
 models/*
 !models/*.sh
+
+# tmp folder
+tmp/*
+
+# env folder
+env/*
+
 # log files
 medcat.log
-

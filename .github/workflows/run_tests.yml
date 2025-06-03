@@ -38,7 +38,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install virtualenv setuptools
           python -m pip install isort flake8 mypy stubs types-Flask types-simplejson types-setuptools
-          python -m pip install -r medcat_service/requirements.txt
+          python -m pip install -r ./requirements.txt
 
       - name: Check linting and types
         run: |

@@ -30,7 +30,7 @@ RUN apt-get clean autoclean && apt-get autoremove --purge -y
 
 # Set the python path and preapre the base layer
 WORKDIR /cat
-COPY ./medcat_service/requirements.txt /cat
+COPY ./requirements.txt /cat
 RUN pip install --upgrade pip
 
 # clean up pip
