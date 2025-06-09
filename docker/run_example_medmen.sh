@@ -4,4 +4,4 @@ set -e
 ( cd ../models && bash download_medmen.sh )
 
 echo "Running docker-compose"
-docker-compose up
+docker-compose -f docker-compose.yml up

@@ -4,8 +4,13 @@ services:
     ### Multiple images available:
     ## default image, only CPU support: cogstacksystems/medcat-service:latest 
     ## GPU support: cogstacksystems/medcat-service-gpu:latest
-    image: cogstacksystems/medcat-service-gpu:latest
+    # image: cogstacksystems/medcat-service:latest
     restart: always
+    ## Default dockerfile: ../Dockerfile
+    ## GPU dockerfile: ../Dockerfile_gpu
+    build:
+      context: ../
+      dockerfile: "Dockerfile_gpu"
     environment:
       - http_proxy=$HTTP_PROXY
       - https_proxy=$HTTPS_PROXY
@@ -34,8 +39,13 @@ services:
     ### Multiple images available:
     ## default image, only CPU support: cogstacksystems/medcat-service:latest 
     ## GPU support: cogstacksystems/medcat-service-gpu:latest
-    image: cogstacksystems/medcat-service-gpu:latest
+    # image: cogstacksystems/medcat-service:latest
     restart: always
+    ## Default dockerfile: ../Dockerfile
+    ## GPU dockerfile: ../Dockerfile_gpu
+    build:
+      context: ../
+      dockerfile: "Dockerfile_gpu"
     environment:
       - http_proxy=$HTTP_PROXY
       - https_proxy=$HTTPS_PROXY
