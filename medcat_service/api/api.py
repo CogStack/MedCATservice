@@ -44,8 +44,11 @@ def process(nlp_service: NlpService) -> Response:
     if payload is None or 'content' not in payload or payload['content'] is None:
         return Response(response="Input Payload should be JSON", status=400)
 
+    # send across the meta_anns filters in the request.
+    meta_anns_filters = payload.get('meta_anns_filters', None)
+
     try:
-        result = nlp_service.nlp.process_content(payload['content'])
+        result = nlp_service.nlp.process_content(payload['content'], meta_anns_filters=meta_anns_filters)
         app_info = nlp_service.nlp.get_app_info()
         response = {'result': result, 'medcat_info': app_info}
         return Response(response=json.dumps(response, iterable_as_array=True), status=200, mimetype="application/json")

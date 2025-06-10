@@ -33,10 +33,10 @@ class NlpProcessor:
     def get_app_info(self):
         pass
 
-    def process_content(self, content):
+    def process_content(self, content, *args, **kwargs):
         pass
 
-    def process_content_bulk(self, content):
+    def process_content_bulk(self, content, *args, **kwargs):
         pass
 
     @staticmethod
@@ -86,9 +86,10 @@ class MedCatProcessor(NlpProcessor):
         self.log.info("MedCAT processor is ready")
 
     def get_app_info(self):
-        """
-        Returns general information about the application
-        :return: application information stored as KVPs
+        """Returns general information about the application.
+
+        Returns:
+            dict: Application information stored as KVPs.
         """
         return {"service_app_name": self.app_name,
                 "service_language": self.app_lang,
@@ -97,7 +98,9 @@ class MedCatProcessor(NlpProcessor):
                 "model_card_info": self.model_card_info
                 }
 
-    def process_entities(self, entities):
+    def process_entities(self, entities, *args, **kwargs):
+        """Process entities for repsonse and serialisation
+        """
         if type(entities) is dict:
             if "entities" in entities.keys():
                 entities = entities["entities"]
@@ -107,11 +110,21 @@ class MedCatProcessor(NlpProcessor):
 
         yield entities
 
-    def process_content(self, content):
-        """
-        Processes a single document extracting the annotations.
-        :param content: document to be processed, containing "text" field.
-        :return: processing result containing document with extracted annotations stored as KVPs.
+    def process_content(self, content, *args, **kwargs):
+        """Processes a single document extracting the annotations.
+
+        Args:
+            content (dict): Document to be processed, containing "text" field.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+                meta_anns_filters (List[Tuple[str, List[str]]]): List of task and filter values pairs to filter
+                    entities by. Example: meta_anns_filters = [("Presence", ["True"]),
+                    ("Subject", ["Patient", "Family"])] would filter entities where each
+                    entity.meta_anns['Presence']['value'] is 'True' and
+                    entity.meta_anns['Subject']['value'] is 'Patient' or 'Family'
+
+        Returns:
+            dict: Processing result containing document with extracted annotations stored as KVPs.
         """
         if "text" not in content:
             error_msg = "'text' field missing in the payload content."
@@ -141,7 +154,13 @@ class MedCatProcessor(NlpProcessor):
 
         elapsed_time = (time.time_ns() - start_time_ns) / 10e8  # nanoseconds to seconds
 
-        entities = self.process_entities(entities)
+        if kwargs.get("meta_anns_filters"):
+            meta_anns_filters = kwargs.get("meta_anns_filters")
+            entities = [e for e in entities['entities'].values() if
+                        all(e['meta_anns'][task]['value'] in filter_values
+                            for task, filter_values in meta_anns_filters)]
+
+        entities = self.process_entities(entities, **kwargs)
 
         nlp_result = {
             "text": str(text),
@@ -158,12 +177,14 @@ class MedCatProcessor(NlpProcessor):
         return nlp_result
 
     def process_content_bulk(self, content):
-        """
-        Processes an array of documents extracting the annotations.
-        :param content: document to be processed, containing "text" field.
-        :return: processing result containing documents with extracted annotations, stored as KVPs.
-        """
+        """Processes an array of documents extracting the annotations.
 
+        Args:
+            content (list): List of documents to be processed, each containing "text" field.
+
+        Returns:
+            list: Processing results containing documents with extracted annotations, stored as KVPs.
+        """
         # use generators both to provide input documents and to provide resulting annotations
         # to avoid too many mem-copies
         invalid_doc_ids = []
@@ -187,8 +208,14 @@ class MedCatProcessor(NlpProcessor):
         return self._generate_result(content, ann_res, invalid_doc_ids, additional_info)
 
     def retrain_medcat(self, content, replace_cdb):
-        """
-        Retrains Medcat and redeploys model
+        """Retrains Medcat and redeploys model.
+
+        Args:
+            content: Training data for retraining.
+            replace_cdb: Whether to replace the existing CDB.
+
+        Returns:
+            dict: Results containing precision, recall, F1 scores and error dictionaries.
         """
 
         with open("/cat/models/data.json", "w") as f:
@@ -207,6 +234,11 @@ class MedCatProcessor(NlpProcessor):
         return {"results": [p, r, f1, tp_dict, fp_dict, fn_dict]}
 
     def _populate_model_card_info(self, config: Config):
+        """Populates model card information from config.
+
+        Args:
+            config (Config): MedCAT configuration object.
+        """
         self.model_card_info["ontologies"] = config.version.ontology \
             if (isinstance(config.version.ontology, list)) else str(config.version.ontology)
         self.model_card_info["meta_cat_model_names"] = [i["Category Name"] for i in config.version.meta_cats] \
@@ -216,8 +248,14 @@ class MedCatProcessor(NlpProcessor):
     # helper MedCAT methods
     #
     def _create_cat(self):
-        """
-        Loads MedCAT resources and creates CAT instance
+        """Loads MedCAT resources and creates CAT instance.
+
+        Returns:
+            CAT: Initialized MedCAT instance.
+
+        Raises:
+            ValueError: If required environment variables are not set.
+            Exception: If concept database path is not specified.
         """
         cat, cdb, vocab, config = None, None, None, None
 
@@ -313,13 +351,14 @@ class MedCatProcessor(NlpProcessor):
     #
     @staticmethod
     def _generate_input_doc(documents, invalid_doc_idx):
-        """
-            Generator function returning documents to be processed as a list of tuples:
-            (idx, text), (idx, text), ...
-            Skips empty documents and reports their ids to the invalid_doc_idx array
-            :param documents: array of input documents that contain "text" field
-            :param invalid_doc_idx:  array that will contain invalid document idx
-            :return: consecutive tuples of (idx, document)
+        """Generator function returning documents to be processed.
+
+        Args:
+            documents (list): Array of input documents that contain "text" field.
+            invalid_doc_idx (list): Array that will contain invalid document idx.
+
+        Yields:
+            tuple: Consecutive tuples of (idx, document).
         """
         for i in range(0, len(documents)):
             # assume the document to be processed only when it is not blank
@@ -330,13 +369,16 @@ class MedCatProcessor(NlpProcessor):
                 invalid_doc_idx.append(i)
 
     def _generate_result(self, in_documents, annotations, invalid_doc_idx, additional_info={}):
-        """
-            Generator function merging the resulting annotations with the input documents.
-            The result for documents that were invalid will not contain any annotations.
-            :param in_documents: array of input documents that contain "text" field
-            :param annotations: array of annotations extracted from documents
-            :param invalid_doc_idx: array of invalid document idx
-            :return:
+        """Generator function merging the resulting annotations with the input documents.
+
+        Args:
+            in_documents (list): Array of input documents that contain "text" field.
+            annotations (dict): Array of annotations extracted from documents.
+            invalid_doc_idx (list): Array of invalid document idx.
+            additional_info (dict, optional): Additional information to include in results. Defaults to {}.
+
+        Yields:
+            dict: Merged document with annotations.
         """
 
         for i in range(len(in_documents)):
@@ -374,9 +416,13 @@ class MedCatProcessor(NlpProcessor):
 
     @staticmethod
     def _get_medcat_version():
-        """
-        Returns the version string of the MedCAT module as reported by pip
-        :return:
+        """Returns the version string of the MedCAT module as reported by pip.
+
+        Returns:
+            str: Version string of MedCAT.
+
+        Raises:
+            Exception: If MedCAT library version cannot be read.
         """
         try:
             import pkg_resources
@@ -387,9 +433,25 @@ class MedCatProcessor(NlpProcessor):
 
     def _retrain_supervised(self, cdb_path, data_path, vocab_path, cv=1, nepochs=1,
                             test_size=0.1, lr=1, groups=None, **kwargs):
+        """Retrains MedCAT model using supervised learning.
+
+        Args:
+            cdb_path (str): Path to concept database.
+            data_path (str): Path to training data.
+            vocab_path (str): Path to vocabulary.
+            cv (int, optional): Number of cross-validation folds. Defaults to 1.
+            nepochs (int, optional): Number of training epochs. Defaults to 1.
+            test_size (float, optional): Size of test set. Defaults to 0.1.
+            lr (float, optional): Learning rate. Defaults to 1.
+            groups (list, optional): Training groups. Defaults to None.
+            **kwargs: Additional keyword arguments.
+
+        Returns:
+            tuple: Precision, recall, F1 score, and error dictionaries.
+        """
 
         data = json.load(open(data_path))
-        correct_ids = self._prepareDocumentsForPeformanceAnalysis(data)
+        correct_ids = MedCatProcessor._prepareDocumentsForPeformanceAnalysis(data)
 
         cat = MedCatProcessor._create_cat(self)
 
@@ -420,6 +482,16 @@ class MedCatProcessor(NlpProcessor):
         return p, r, f1, tp_dict, fp_dict, fn_dict
 
     def _computeF1forDocuments(self, data, cat, correct_ids):
+        """Computes F1 score and related metrics for documents.
+
+        Args:
+            data (dict): Input data containing projects and documents.
+            cat (CAT): MedCAT instance.
+            correct_ids (dict): Dictionary of correct annotations.
+
+        Returns:
+            tuple: Precision, recall, F1 score, and error dictionaries.
+        """
 
         true_positives_dict, false_positives_dict, false_negatives_dict = {}, {}, {}
         true_positive_no, false_positive_no, false_negative_no = 0, 0, 0
@@ -440,8 +512,10 @@ class MedCatProcessor(NlpProcessor):
                 results = cat.get_entities(document["text"])
                 predictions[document["id"]] = [[a["start"], a["end"], a["cui"]] for a in results]
 
-                tps, fps, fns = self._getAccuraciesforDocument(correct_ids[project["id"]][document["id"]],
-                                                               predictions[document["id"]])
+                tps, fps, fns = MedCatProcessor._getAccuraciesforDocument(
+                    predictions[document["id"]],
+                    correct_ids[project["id"]][document["id"]]
+                )
                 true_positive_no += len(tps)
                 false_positive_no += len(fps)
                 false_negative_no += len(fns)
@@ -467,6 +541,14 @@ class MedCatProcessor(NlpProcessor):
 
     @staticmethod
     def _prepareDocumentsForPeformanceAnalysis(data):
+        """Prepares documents for performance analysis.
+
+        Args:
+            data (dict): Input data containing projects and documents.
+
+        Returns:
+            dict: Dictionary of correct annotations by project and document.
+        """
         correct_ids = {}
         for project in data["projects"]:
             correct_ids[project["id"]] = {}
@@ -482,6 +564,15 @@ class MedCatProcessor(NlpProcessor):
 
     @staticmethod
     def _getAccuraciesforDocument(prediction, correct_ids):
+        """Computes accuracy metrics for a single document.
+
+        Args:
+            prediction (list): List of predicted annotations.
+            correct_ids (list): List of correct annotations.
+
+        Returns:
+            tuple: True positives, false positives, and false negatives.
+        """
 
         tup1 = list(map(tuple, correct_ids))
         tup2 = list(map(tuple, prediction))
@@ -494,6 +585,15 @@ class MedCatProcessor(NlpProcessor):
 
     @staticmethod
     def _checkmodelimproved(f1_model_a, f1_model_b):
+        """Checks if model performance has improved.
+
+        Args:
+            f1_model_a (float): F1 score of first model.
+            f1_model_b (float): F1 score of second model.
+
+        Returns:
+            bool: True if first model has better F1 score, False otherwise.
+        """
 
         if f1_model_a > f1_model_b:
             return True
