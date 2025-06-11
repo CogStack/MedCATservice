@@ -15,7 +15,7 @@ services:
       - ../env/medcat.env
 
     volumes:
-    - ../models/medmen:/cat/models
+    - ../models:/cat/models/
     ports:
       - "5555:5000"
     networks:
@@ -35,7 +35,7 @@ services:
       - ../env/app_deid.env
       - ../env/medcat_deid.env
     volumes:
-    - ../models/medmen:/cat/models/:rw
+    - ../models:/cat/models/
     ports:
       - "5556:5000"
     networks:
@@ -43,4 +43,5 @@ services:
       
 networks:
   cognet:
+    driver: bridge
     name: cogstack-net

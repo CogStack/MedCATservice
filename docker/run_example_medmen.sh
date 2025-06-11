@@ -7,7 +7,8 @@ echo "Running docker-compose"
 DOCKER_COMPOSE_FILE="docker-compose-example-medmen.yml"
 docker compose -f ${DOCKER_COMPOSE_FILE} up -d
 
-LOCALHOST_NAME=${LOCALHOST_NAME-localhost} # To run in a container run "export LOCALHOST_NAME=host.docker.internal"
+# To run in a container run "export LOCALHOST_NAME=host.docker.internal"
+LOCALHOST_NAME=${LOCALHOST_NAME:-localhost}
 
 API="http://${LOCALHOST_NAME}:5555/api/info"
 
