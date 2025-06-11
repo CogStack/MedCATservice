@@ -3,17 +3,17 @@ FROM python:3.11-bookworm
 ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
 # nvidia-container-runtime
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
-RUN apt-get install apt-transport-https ca-certificates curl gnupg-agent
-RUN apt-get install curl wget
+RUN apt-get install apt-transport-https ca-certificates curl gnupg-agent wget
 
 RUN echo "deb http://deb.debian.org/debian bookworm-backports main contrib non-free" | tee -a /etc/apt/sources.list
 RUN echo "deb-src http://deb.debian.org/debian bookworm-backports main contrib non-free" | tee -a /etc/apt/sources.list
 
 RUN apt-get update && apt-get upgrade -y && \
      apt-get install -y software-properties-common
+
 # NVIDIA Docker
 RUN export distribution=$(. /etc/os-release;echo $ID$VERSION_ID)
 
