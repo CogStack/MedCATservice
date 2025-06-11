@@ -1,0 +1,46 @@
+name: cogstack-medcat-service
+services:
+  nlp-medcat-service-production:
+    ### Multiple images available:
+    ## default image, only CPU support: cogstacksystems/medcat-service:latest 
+    ## GPU support: cogstacksystems/medcat-service-gpu:latest
+    image: cogstacksystems/medcat-service:latest
+    restart: always
+    environment:
+      - http_proxy=$HTTP_PROXY
+      - https_proxy=$HTTPS_PROXY
+      - no_proxy=$no_proxy
+    env_file:
+      - ../env/app.env
+      - ../env/medcat.env
+
+    volumes:
+    - ../models/medmen:/cat/models
+    ports:
+      - "5555:5000"
+    networks:
+      - cognet
+
+  nlp-medcat-service-production-deid:
+    ### Multiple images available:
+    ## default image, only CPU support: cogstacksystems/medcat-service:latest 
+    ## GPU support: cogstacksystems/medcat-service-gpu:latest
+    image: cogstacksystems/medcat-service:latest
+    restart: always
+    environment:
+      - http_proxy=$HTTP_PROXY
+      - https_proxy=$HTTPS_PROXY
+      - no_proxy=$no_proxy
+    env_file:
+      - ../env/app_deid.env
+      - ../env/medcat_deid.env
+    volumes:
+    - ../models/medmen:/cat/models/:rw
+    ports:
+      - "5556:5000"
+    networks:
+      - cognet
+      
+networks:
+  cognet:
+    name: cogstack-net
