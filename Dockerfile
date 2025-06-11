@@ -18,4 +18,4 @@ RUN for spacy_model in ${SPACY_MODELS}; do python -m spacy download $spacy_model
 COPY . /cat
 
 # Now run the simple api
-CMD ["/bin/bash", "start-service-prod.sh"]
+CMD ["/bin/bash", "start_service_production.sh"]
