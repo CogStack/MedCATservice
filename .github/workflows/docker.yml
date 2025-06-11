@@ -1,12 +1,11 @@
 name: Docker
 
 on:
-
   push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
-    
+    branches:
+      - '**'
+    tags:
+      - 'v*.*.*'  # e.g., v0.1.1
   release:
     types: [published]
 
@@ -14,15 +13,8 @@ on:
   workflow_dispatch:
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
-    
-    env:
-      working-directory: ./
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:        
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
@@ -56,8 +48,8 @@ jobs:
           allow: network.host
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          # cache-from: type=registry,ref=cogstacksystems/medcat-service:buildcache
-          # cache-to: type=registry,ref=cogstacksystems/medcat-service:buildcache,mode=max
+          cache-from: type=registry,ref=cogstacksystems/medcat-service:buildcache
+          cache-to: type=registry,ref=cogstacksystems/medcat-service:buildcache,mode=max
       
       - name: Extract metadata (tags, labels) for Docker MedCATservice-gpu
         id: meta-gpu
@@ -83,6 +75,8 @@ jobs:
           tags: ${{ steps.meta-gpu.outputs.tags }}
           labels: ${{ steps.meta-gpu.outputs.labels }}
           push: true
-
+          cache-from: type=registry,ref=cogstacksystems/medcat-service-gpu:buildcache
+          cache-to: type=registry,ref=cogstacksystems/medcat-service-gpu:buildcache,mode=max
+          
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
