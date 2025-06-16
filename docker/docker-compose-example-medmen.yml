@@ -4,12 +4,17 @@ services:
     ### Multiple images available:
     ## default image, only CPU support: cogstacksystems/medcat-service:latest 
     ## GPU support: cogstacksystems/medcat-service-gpu:latest
-    image: cogstacksystems/medcat-service:latest
+    image: cogstacksystems/medcat-service:dev-latest
     restart: always
     environment:
       - http_proxy=$HTTP_PROXY
       - https_proxy=$HTTPS_PROXY
       - no_proxy=$no_proxy
+      - ENABLE_MODEL_DOWNLOAD=true
+      - MODEL_NAME=medmen
+      - MODEL_VOCAB_URL=https://cogstack-medcat-example-models.s3.eu-west-2.amazonaws.com/medcat-example-models/vocab.dat 
+      - MODEL_CDB_URL=https://cogstack-medcat-example-models.s3.eu-west-2.amazonaws.com/medcat-example-models/cdb-medmen-v1.dat 
+      - MODEL_META_URL=https://cogstack-medcat-example-models.s3.eu-west-2.amazonaws.com/medcat-example-models/mc_status.zip 
     env_file:
       - ../env/app.env
       - ../env/medcat.env
@@ -21,27 +26,27 @@ services:
     networks:
       - cognet
 
-  nlp-medcat-service-production-deid:
-    ### Multiple images available:
-    ## default image, only CPU support: cogstacksystems/medcat-service:latest 
-    ## GPU support: cogstacksystems/medcat-service-gpu:latest
-    image: cogstacksystems/medcat-service:latest
-    restart: always
-    environment:
-      - http_proxy=$HTTP_PROXY
-      - https_proxy=$HTTPS_PROXY
-      - no_proxy=$no_proxy
-    env_file:
-      - ../env/app_deid.env
-      - ../env/medcat_deid.env
-    volumes:
-    - ../models:/cat/models/
-    ports:
-      - "5556:5000"
-    networks:
-      - cognet
+  # nlp-medcat-service-production-deid:
+  #   ### Multiple images available:
+  #   ## default image, only CPU support: cogstacksystems/medcat-service:latest 
+  #   ## GPU support: cogstacksystems/medcat-service-gpu:latest
+  #   image: cogstacksystems/medcat-service:latest
+  #   restart: always
+  #   environment:
+  #     - http_proxy=$HTTP_PROXY
+  #     - https_proxy=$HTTPS_PROXY
+  #     - no_proxy=$no_proxy
+  #   env_file:
+  #     - ../env/app_deid.env
+  #     - ../env/medcat_deid.env
+  #   volumes:
+  #   - ../models:/cat/models/
+  #   ports:
+  #     - "5556:5000"
+  #   networks:
+  #     - cognet
       
 networks:
   cognet:
-    driver: bridge
+
     name: cogstack-net

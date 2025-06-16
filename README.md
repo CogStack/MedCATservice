@@ -35,7 +35,7 @@ There are two scripts provided implementing starting the application:
 ## Running in a Docker container
 
 The recommended way to run the application is to use the provided Docker image. The Docker image can be either downloaded from the Docker Hub (`cogstacksystems/medcat-service:latest`) or build manually using the provided `Dockerfile`. 
-Please note that by default the built docker image will run the Flask application in 'production' mode running `start-service-prod.sh` script.
+Please note that by default the built docker image will run the Flask application in 'production' mode running `start_service_production.sh` script.
 
 To build the Docker image manually:
 
@@ -59,7 +59,7 @@ If you have a gpu and wish to use it, please change the `docker/docker-compose.y
 ### <span style="color:red">IMPORTANT !</span>
 If you wish to run this docker service manually, use the docker/docker-compose.yml file, execute `docker compose up -d` whilst in the `docker` folder. 
 
-Alternatively, an example script `./docker/run_example_medmen.sh` was provided to run the Docker container with MedCAT service. The script will download an example model (using the `./models/download_medmen.sh` script),it will use an example environment configuration, then it will build and start the service using the provided Docker Compose file, the service <b><span style="color:red">WONT WORK</span></b> without the model being present.
+Alternatively, an example script `./docker/run_example_medmen.sh` was provided to run the Docker container with MedCAT service. The script will download an example model (using the `./scropts/download_medmen.sh` script),it will use an example environment configuration, then it will build and start the service using the provided Docker Compose file, the service <b><span style="color:red">WONT WORK</span></b> without the model being present.
 
 All models should be mounted from the `models/` folder.
 

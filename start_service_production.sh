@@ -30,6 +30,11 @@ fi
 
 SERVER_ACCESS_LOG_FORMAT="%(t)s [ACCESSS] %(h)s \"%(r)s\" %(s)s \"%(f)s\" \"%(a)s\""
 
+# Optionally download models
+if [[ "$ENABLE_MODEL_DOWNLOAD" == "true" ]]; then
+  python /cat/scripts/download_model.py
+fi
+
 # start the server
 #
 echo "Starting up Flask app using gunicorn server ..."

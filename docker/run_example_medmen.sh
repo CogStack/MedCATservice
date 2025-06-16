@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-( cd ../scripts && bash download_medmen.sh )
+# ( cd ../scripts && bash download_medmen.sh )
 
 echo "Running docker-compose"
 DOCKER_COMPOSE_FILE="docker-compose-example-medmen.yml"
