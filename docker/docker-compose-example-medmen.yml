@@ -4,7 +4,7 @@ services:
     ### Multiple images available:
     ## default image, only CPU support: cogstacksystems/medcat-service:latest 
     ## GPU support: cogstacksystems/medcat-service-gpu:latest
-    image: cogstacksystems/medcat-service:dev-latest
+    image: cogstacksystems/medcat-service:latest
     restart: always
     environment:
       - http_proxy=$HTTP_PROXY
