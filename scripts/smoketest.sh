@@ -8,7 +8,6 @@ smoketest_medcat_service() {
         return 1
     fi
 
-
     API="http://${localhost_name}:5555/api/info"
 
     MAX_RETRIES=12

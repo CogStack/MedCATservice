@@ -2,11 +2,9 @@ name: cogstack-medcat-service
 services:
   medcat-service:
     image: cogstacksystems/medcat-service:latest
-    restart: always
+    restart: unless-stopped
     environment:
-      - APP_MEDCAT_MODEL_PACK=/cat/models/examples/example-medcat-v1-model-pack.zip
-    env_file:
-      - ../env/app.env
-      - ../env/medcat.env
+      # Uses a preloaded model pack example inside the image
+      - APP_MEDCAT_MODEL_PACK=/cat/models/examples/example-medcat-v1-model-pack.zip 
     ports:
       - "5555:5000"
