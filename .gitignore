@@ -11,6 +11,8 @@ __pycache__
 # skip the models directory
 models/*
 !models/*.sh
+!models/examples
+models/examples/example-medcat-v1-model-pack
 
 # tmp folder
 tmp/*

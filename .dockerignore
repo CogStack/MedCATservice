@@ -4,8 +4,8 @@ tmp_cat.log
 #envs
 # skip the models directory
 models
-
-
+!models/examples
+models/examples/example-medcat-v1-model-pack
 
 ## Default Python .dockerignore
 # Git

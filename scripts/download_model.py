@@ -2,6 +2,7 @@
 import os
 import sys
 import requests
+import logging
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -13,16 +14,25 @@ required_vars = {
     "MODEL_META_URL": "URL to meta file"
 }
 
+# Setup logging
+logging.basicConfig(
+    format='[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
+    level=logging.INFO,
+)
+log = logging.getLogger()
+
+log.info("Running MedCAT Model Downloader")
+
 # Check for missing env vars
 missing = [var for var in required_vars if not os.getenv(var)]
 if missing:
-    print("MedCAT Model Downloader.\n")
-    print("Usage: set these environment variables before running the script:")
-    for var, desc in required_vars.items():
-        print(f"  {var:<16} - {desc}")
-    print("\nMissing Arguments:")
+    log.error("Missing Required environment variables:")
     for var in missing:
-        print(f"  {var}")
+        log.error(f"  {var}")
+    log.info("Usage: set these environment variables before running the script:")
+    for var, desc in required_vars.items():
+        log.info(f"  {var:<16} - {desc}")
+
     sys.exit(1)
 
 # Load env vars
@@ -43,30 +53,38 @@ meta_dir = model_dir / "Status"
 
 
 def download_file(url, dest_path):
-    print(f"Downloading from {url}")
+    log.info(f"Downloading from {url} to {dest_path}")
     resp = requests.get(url, stream=True)
     resp.raise_for_status()
     total = int(resp.headers.get('content-length', 0))
     downloaded = 0
     chunk_size = 8192
+    last_logged_percent = 0
 
     with open(dest_path, 'wb') as f:
+        # Print status bar to the console
         for chunk in resp.iter_content(chunk_size):
             if chunk:
                 f.write(chunk)
                 downloaded += len(chunk)
                 if total:
-                    done = int(50 * downloaded / total)
-                    percent = (downloaded / total) * 100
-                    sys.stdout.write(f"\r[{'=' * done:<50}] {percent:5.1f}%")
-                    sys.stdout.flush()
-    print("\nDownload complete.")
+                    percent = int(downloaded * 100 / total)
+                    if percent - last_logged_percent >= 10 or percent == 100:
+                        last_logged_percent = percent
+                        done = int(50 * percent / 100)
+                        downloaded_mb = downloaded / (1024 * 1024)
+                        total_mb = total / (1024 * 1024)
+                        log.info(f"[{'=' * done:<50}] {percent:3d}% {downloaded_mb:.2f} MB / {total_mb:.2f} MB")
+
+    os.chmod(dest_path, 0o644)
+    log.info(f"Download complete to {dest_path}")
 
 
 # Download vocab and cdb if missing
 if vocab_file.exists() and cdb_file.exists():
-    print(f"{model_name} model already present -- skipping download")
+    log.info(f"{model_name} model already present in Vocabulary: '{vocab_file}' and CDB: '{cdb_file}'. Skipping download")
 else:
+    log.info(f"Starting download of MedCAT Model '{model_name}'")
     if not vocab_file.exists():
         download_file(vocab_url, vocab_file)
     if not cdb_file.exists():
@@ -74,12 +92,12 @@ else:
 
 # Download and unzip meta if missing
 if not meta_dir.exists():
-    print("Downloading meta model: status")
+    log.info("Downloading meta model: status")
     download_file(meta_url, meta_zip)
     with ZipFile(meta_zip, 'r') as zip_ref:
         zip_ref.extractall(model_dir)
     meta_zip.unlink()
 else:
-    print("Meta model already present -- skipping download")
+    log.info(f"Meta model already present in {meta_dir} -- skipping download")
 
-print(f"Completed downloading model '{model_name}'")
+log.info(f"Completed downloading model '{model_name}'")
