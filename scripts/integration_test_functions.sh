@@ -33,11 +33,7 @@ smoketest_medcat_service() {
     exit 1
     fi
 
-    cat <<EOF
------------------------------------------------------------------
-MedCATService running on http://${LOCALHOST_NAME}:5555/
------------------------------------------------------------------
-EOF
+    echo "Service passed basic smoke test"
 
 }
 
@@ -62,6 +58,7 @@ integration_test_medcat_service() {
 
   if [[ "$actual_annotation" == "$expected_annotation" ]]; then
     echo "Service working and extracting annotations"
+    exit 0
   else
     echo "Expected: $expected_annotation, Got: $actual_annotation"
     echo -e "Actual response was:\n${actual}"
