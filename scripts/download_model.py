@@ -76,8 +76,6 @@ def download_file(url, dest_path):
                         downloaded_mb = downloaded / (1024 * 1024)
                         total_mb = total / (1024 * 1024)
                         log.info(f"[{'=' * done:<50}] {percent:3d}% {downloaded_mb:.2f} MB / {total_mb:.2f} MB")
-    print("hello")
-
     os.chmod(dest_path, 0o644)
     log.info(f"Download complete to {dest_path}")
 
