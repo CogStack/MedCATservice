@@ -8,7 +8,7 @@ python3 -m spacy download en_core_web_md
 python3 -m spacy download en_core_web_lg
 
 # download the test MedCAT model
-( cd ./models && bash download_medmen.sh )
+bash ./scripts/download_medmen.sh
 export APP_CDB_MODEL="$PWD/models/medmen/cdb.dat"
 export APP_VOCAB_MODEL="$PWD/models/medmen/vocab.dat"
 
