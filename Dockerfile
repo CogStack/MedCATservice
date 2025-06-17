@@ -12,7 +12,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Get the spacy model
 ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"
-RUN for spacy_model in ${SPACY_MODELS}; do python -m spacy download $spacy_model; done
+RUN for spacy_model in $SPACY_MODELS; do python -m spacy download $spacy_model; done
 
 # Copy the remaining files
 COPY . /cat
