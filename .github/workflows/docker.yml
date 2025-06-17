@@ -16,7 +16,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      image_digest: ${{ steps.docker_build.outputs.digest }}
+      image_version: ${{ steps.meta.outputs.version }}
     steps:        
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
@@ -92,7 +92,7 @@ jobs:
       - name: Run Test with example model pack
         run: |
           echo "🧪 Running Examples test..."
-          export IMAGE_TAG=${{ needs.build.outputs.image_digest }}
+          export IMAGE_TAG=${{ needs.build.outputs.image_version }}
           echo "Running with image tag ${IMAGE_TAG}"
           bash scripts/test_examples.sh
           
