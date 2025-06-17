@@ -1,7 +1,7 @@
 name: cogstack-medcat-service
 services:
   medcat-service:
-    image: cogstacksystems/medcat-service:latest
+    image: cogstacksystems/medcat-service:${IMAGE_TAG-latest}
     restart: unless-stopped
     environment:
       # Uses a preloaded model pack example inside the image

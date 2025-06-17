@@ -92,6 +92,8 @@ jobs:
       - name: Run Test with example model pack
         run: |
           echo "🧪 Running Examples test..."
+          export IMAGE_TAG= ${{ build.steps.docker_build.outputs.digest }}
+          echo "Running with image tag ${IMAGE_TAG}"
           bash scripts/test_examples.sh
           
       - name: Report test result
