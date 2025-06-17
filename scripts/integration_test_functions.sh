@@ -58,7 +58,6 @@ integration_test_medcat_service() {
 
   if [[ "$actual_annotation" == "$expected_annotation" ]]; then
     echo "Service working and extracting annotations"
-    exit 0
   else
     echo "Expected: $expected_annotation, Got: $actual_annotation"
     echo -e "Actual response was:\n${actual}"
