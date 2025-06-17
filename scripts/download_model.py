@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
+import logging
 import os
 import sys
-import requests
-import logging
 from pathlib import Path
 from zipfile import ZipFile
+
+import requests
 
 # Required environment variables
 required_vars = {
     "MODEL_NAME": "name of the model",
     "MODEL_VOCAB_URL": "URL to vocab file",
     "MODEL_CDB_URL": "URL to CDB file",
-    "MODEL_META_URL": "URL to meta file"
+    "MODEL_META_URL": "URL to meta file",
 }
 
 # Setup logging
 logging.basicConfig(
-    format='[%(asctime)s] [%(levelname)s] %(name)s: %(message)s',
+    format="[%(asctime)s] [%(levelname)s] %(name)s: %(message)s",
     level=logging.INFO,
 )
 log = logging.getLogger()
@@ -56,12 +57,12 @@ def download_file(url, dest_path):
     log.info(f"Downloading from {url} to {dest_path}")
     resp = requests.get(url, stream=True)
     resp.raise_for_status()
-    total = int(resp.headers.get('content-length', 0))
+    total = int(resp.headers.get("content-length", 0))
     downloaded = 0
     chunk_size = 8192
     last_logged_percent = 0
 
-    with open(dest_path, 'wb') as f:
+    with open(dest_path, "wb") as f:
         # Print status bar to the console
         for chunk in resp.iter_content(chunk_size):
             if chunk:
@@ -75,6 +76,7 @@ def download_file(url, dest_path):
                         downloaded_mb = downloaded / (1024 * 1024)
                         total_mb = total / (1024 * 1024)
                         log.info(f"[{'=' * done:<50}] {percent:3d}% {downloaded_mb:.2f} MB / {total_mb:.2f} MB")
+    print("hello")
 
     os.chmod(dest_path, 0o644)
     log.info(f"Download complete to {dest_path}")
@@ -82,7 +84,9 @@ def download_file(url, dest_path):
 
 # Download vocab and cdb if missing
 if vocab_file.exists() and cdb_file.exists():
-    log.info(f"{model_name} model already present in Vocabulary: '{vocab_file}' and CDB: '{cdb_file}'. Skipping download")
+    log.info(
+        f"{model_name} model already present with Vocabulary: '{vocab_file}' and CDB: '{cdb_file}'. Skipping download"
+    )
 else:
     log.info(f"Starting download of MedCAT Model '{model_name}'")
     if not vocab_file.exists():
@@ -94,7 +98,7 @@ else:
 if not meta_dir.exists():
     log.info("Downloading meta model: status")
     download_file(meta_url, meta_zip)
-    with ZipFile(meta_zip, 'r') as zip_ref:
+    with ZipFile(meta_zip, "r") as zip_ref:
         zip_ref.extractall(model_dir)
     meta_zip.unlink()
 else:

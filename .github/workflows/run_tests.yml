@@ -31,13 +31,14 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: 3.9
+          cache: pip
 
       - name: Install dependencies
         run: |
           sudo apt-get install -y isort flake8
           python -m pip install --upgrade pip
           python -m pip install virtualenv setuptools
-          python -m pip install isort flake8 mypy stubs types-Flask types-simplejson types-setuptools
+          python -m pip install isort flake8 mypy stubs types-Flask types-simplejson types-setuptools types-requests
           python -m pip install -r ./requirements.txt
 
       - name: Check linting and types
