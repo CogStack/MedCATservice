@@ -15,6 +15,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image-digest: ${{ steps.publish.outputs.digest }}
     steps:        
       - name: Log in to Docker Hub
         uses: docker/login-action@v1
@@ -80,3 +82,24 @@ jobs:
           
       - name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+  integration_test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Run Test with example model pack
+        run: |
+          echo "🧪 Running Examples test..."
+          bash scripts/test_examples.sh
+          
+      - name: Report test result
+        if: always()
+        run: |
+          if [ $? -eq 0 ]; then
+            echo "✅ Integration test PASSED"
+          else
+            echo "❌ Integration test FAILED"
+            exit 1
+          fi
