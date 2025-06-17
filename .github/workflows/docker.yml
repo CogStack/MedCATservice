@@ -92,7 +92,7 @@ jobs:
       - name: Run Test with example model pack
         run: |
           echo "🧪 Running Examples test..."
-          export IMAGE_TAG=${{ needs.build.outputs.image_version }}
+          export IMAGE_TAG=${{ needs.build.outputs.image_version }} # Improve by running exact digest instead
           echo "Running with image tag ${IMAGE_TAG}"
           bash scripts/test_examples.sh
           
