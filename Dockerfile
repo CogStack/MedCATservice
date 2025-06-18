@@ -7,12 +7,14 @@ WORKDIR /cat
 COPY ./requirements.txt /cat
 
 # Install Python dependencies
-ARG USE_CPU_TORCH=false
-# NOTE: Allow building without GPU so as to lower image size (disabled by default)
+ARG USE_CPU_TORCH=true
+# NOTE: Allow building without GPU so as to lower image size (GPU is disabled by default)
 RUN pip install -U pip && \
     if [ "${USE_CPU_TORCH}" = "true" ]; then \
+        echo "Installing Torch for CPU, without GPU support " && \
         pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/; \
     else \
+        echo "Installing Torch with GPU support" && \
         pip install --no-cache-dir -r requirements.txt; \
     fi
 
