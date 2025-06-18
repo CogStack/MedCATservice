@@ -5,10 +5,16 @@ ENV CRYPTOGRAPHY_DONT_BUILD_RUST=1
 # Set the python path and preapre the base layer
 WORKDIR /cat
 COPY ./requirements.txt /cat
-RUN pip install --upgrade pip
 
-# Install requirements for the app
-RUN pip3 install --no-cache-dir -r requirements.txt
+# Install Python dependencies
+ARG USE_CPU_TORCH=false
+# NOTE: Allow building without GPU so as to lower image size (disabled by default)
+RUN pip install -U pip && \
+    if [ "${USE_CPU_TORCH}" = "true" ]; then \
+        pip install --no-cache-dir -r requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/; \
+    else \
+        pip install --no-cache-dir -r requirements.txt; \
+    fi
 
 # Get the spacy model
 ARG SPACY_MODELS="en_core_web_sm en_core_web_md en_core_web_lg"

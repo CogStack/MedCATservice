@@ -27,13 +27,13 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v2
 
-
       - name: Cache MedMen Model
         id: cache-medmen
         uses: actions/cache@v4
         with:
           path: models/medmen
           key: medmen-${{ hashFiles('scripts/download_medmen.sh') }}
+
       - name: Install Python 3
         uses: actions/setup-python@v5
         with:
