@@ -3,9 +3,9 @@ name: Run tests
 on:
 
   push:
-    branches: [ devel, master ]
+    branches: [ devel, main ]
   pull_request:
-    branches: [ devel, master ]
+    branches: [ devel, main ]
     
   release:
     types: [published]

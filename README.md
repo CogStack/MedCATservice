@@ -4,7 +4,7 @@ This project implements the [MedCAT](https://github.com/CogStack/MedCAT/) NLP ap
 
 Git Branches:
   - devel: development branch, latest updates and features, might be unstable.
-  - master: stable releases
+  - main: stable releases
   - legacy: branch for old MedCAT version (pre v1.0, new models wont work, only v0.x models will)
 
 
