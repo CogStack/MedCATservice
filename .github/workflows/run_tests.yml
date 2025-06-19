@@ -27,18 +27,26 @@ jobs:
       - name: checkout repo
         uses: actions/checkout@v2
 
+      - name: Cache MedMen Model
+        id: cache-medmen
+        uses: actions/cache@v4
+        with:
+          path: models/medmen
+          key: medmen-${{ hashFiles('scripts/download_medmen.sh') }}
+
       - name: Install Python 3
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v5
         with:
           python-version: 3.9
+          cache: 'pip' # caching pip dependencies
 
       - name: Install dependencies
         run: |
           sudo apt-get install -y isort flake8
           python -m pip install --upgrade pip
           python -m pip install virtualenv setuptools
-          python -m pip install isort flake8 mypy stubs types-Flask types-simplejson types-setuptools
-          python -m pip install -r ./requirements.txt
+          python -m pip install isort flake8 mypy stubs types-Flask types-simplejson types-setuptools types-requests
+          python -m pip install -r ./requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu/;
 
       - name: Check linting and types
         run: |

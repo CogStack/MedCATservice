@@ -1,4 +1,10 @@
 #!/bin/bash
+echo "Starting MedCAT Service"
+
+# Optionally download model before server startup
+if [[ "$ENABLE_MODEL_DOWNLOAD" == "true" ]]; then
+  python -u /cat/scripts/download_model.py
+fi
 
 # check the gunicorn config params
 #
